@@ -17,4 +17,4 @@
 
 # Overview
 
-VSD is a showcase of mechanics of vehicle pawn and controller, with support AI and NPC AI drive.
+VSD is a Showcase of Vehicle control with player input with AI Assist and NPC Vehicle AI with checkpoints.
