@@ -3,18 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Vehicle/CVehiclePawn.h"
 #include "AIController.h"
-#include "CAIController.generated.h"
+#include "CVehicleAIController.generated.h"
+
 
 /**
  * 
  */
 UCLASS()
-class ACAIController : public AAIController
+class ACVehicleAIController : public AAIController
 {
 	GENERATED_BODY()
 	
-	ACAIController();
+	ACVehicleAIController();
 public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
@@ -36,5 +38,5 @@ private:
 	UPROPERTY()
 	ACVehiclePawn* ControlledVehicle = nullptr;
 
-	void DriveTowardTarget(float DeltaTime);
+	void DriveTowardTarget(float DeltaTime) const;
 };

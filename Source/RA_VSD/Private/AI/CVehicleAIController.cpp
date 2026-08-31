@@ -1,23 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AI/CAIController.h"
+#include "AI/CVehicleAIController.h"
 
 #include "Vehicle/CVehiclePawn.h"
 
-ACAIController::ACAIController()
+ACVehicleAIController::ACVehicleAIController()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void ACAIController::OnPossess(APawn* InPawn)
+void ACVehicleAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	
 	ControlledVehicle = Cast<ACVehiclePawn>(InPawn);
 }
 
-void ACAIController::OnUnPossess()
+void ACVehicleAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
 	
@@ -32,17 +32,17 @@ void ACAIController::OnUnPossess()
 
 }
 
-void ACAIController::Tick(float DeltaTime)
+void ACVehicleAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
 	DriveTowardTarget(DeltaTime);
 }
 
-void ACAIController::DriveTowardTarget(float DeltaTime)
+void ACVehicleAIController::DriveTowardTarget(float DeltaTime) const
 {
-	const APawn* Pawn = ControlledVehicle;
-	const FVector PawnLocation = Pawn->GetActorLocation();
+	const APawn* VehiclePawn = ControlledVehicle;
+	const FVector PawnLocation = VehiclePawn->GetActorLocation();
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	
 	const FVector ToTarget = TargetLocation - PawnLocation;
@@ -55,11 +55,11 @@ void ACAIController::DriveTowardTarget(float DeltaTime)
 		ControlledVehicle->Brake(1.f);
 	}
 	
-	const FVector ForwardVector = Pawn->GetActorForwardVector();
+	const FVector ForwardVector = VehiclePawn->GetActorForwardVector();
 	const FVector ToTargetNormalized = ToTarget.GetSafeNormal();
 
 	const float ForwardDot = FVector::DotProduct(ForwardVector, ToTargetNormalized);
-	const float RightDot = FVector::DotProduct(Pawn->GetActorRightVector(), ToTargetNormalized);
+	const float RightDot = FVector::DotProduct(VehiclePawn->GetActorRightVector(), ToTargetNormalized);
 
 	float SteeringValue = FMath::Clamp(RightDot * SteeringSensitivity, -1.f, 1.f);
 	

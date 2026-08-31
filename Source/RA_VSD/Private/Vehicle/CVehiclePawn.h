@@ -46,6 +46,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* BrakeInputAction;
 	
+	//AI Controller
+	UPROPERTY(VisibleDefaultsOnly, Category = "AIController")
+	TSubclassOf<class ACVehicleAIController> VehicleAIController;
+	
 	
 	
 };

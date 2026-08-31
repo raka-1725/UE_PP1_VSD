@@ -7,6 +7,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
+#include "AI/CVehicleAIController.h"
+
 ACVehiclePawn::ACVehiclePawn()
 {
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>("Camera Boom");
@@ -15,7 +17,13 @@ ACVehiclePawn::ACVehiclePawn()
 	ViewCam = CreateDefaultSubobject<UCameraComponent>("View Cam");
 	ViewCam->SetupAttachment(CameraBoom,USpringArmComponent::SocketName);
 	
-}
+	VehicleAIController = ACVehicleAIController::StaticClass();
+	AIControllerClass = VehicleAIController;
+	
+	//disable for player, enable for ai
+	AutoPossessAI = EAutoPossessAI::Disabled;
+}	
+
 
 void ACVehiclePawn::BeginPlay()
 {
