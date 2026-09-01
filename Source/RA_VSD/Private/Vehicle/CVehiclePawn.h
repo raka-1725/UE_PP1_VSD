@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "WheeledVehiclePawn.h"
+
+#include "Vehicle/VehicleInputInterface.h"
+
 #include "CVehiclePawn.generated.h"
 
 /**
@@ -20,6 +23,22 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	
+//Possession
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void UnPossessed() override;
+	
+// VehicleInputinterface
+
+	virtual void ApplySteering(float Value) override;
+	virtual void ApplyThrottle(float Value) override;
+	virtual void ApplyBrake(float Value) override;
+	virtual void OnPlayerControl() override;
+	virtual void OnAIControl() override;
+	virtual void OnControlReleased() override;
+	virtual bool IsPlayerDriving() const override;
+	
 	
 //control input | player
 	void Steer(const FInputActionValue& val);
