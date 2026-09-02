@@ -13,22 +13,29 @@ ACVehicleAIController::ACVehicleAIController()
 void ACVehicleAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+	ControlledPawn = InPawn;
 	
-	ControlledVehicle = Cast<ACVehiclePawn>(InPawn);
+	VehicleInput = Cast<IVehicleInputInterface>(InPawn);
+	
+	if (VehicleInput)
+	{
+		VehicleInput->OnAIControl();
+	}
 }
 
 void ACVehicleAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
 	
-	if (ControlledVehicle)
+	if (VehicleInput)
 	{
-		ControlledVehicle->Steer(0.f);
-		ControlledVehicle->Throttle(0.f);
-		ControlledVehicle->Brake(0.f);
+		ZeroInputs();
+		VehicleInput->OnControlReleased();
 	}
 
-	ControlledVehicle = nullptr;
+	VehicleInput = nullptr;
+	ControlledPawn = nullptr;
+
 
 }
 
@@ -41,8 +48,7 @@ void ACVehicleAIController::Tick(float DeltaTime)
 
 void ACVehicleAIController::DriveTowardTarget(float DeltaTime) const
 {
-	const APawn* VehiclePawn = ControlledVehicle;
-	const FVector PawnLocation = VehiclePawn->GetActorLocation();
+	const FVector PawnLocation = ControlledPawn->GetActorLocation();
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	
 	const FVector ToTarget = TargetLocation - PawnLocation;
@@ -50,16 +56,16 @@ void ACVehicleAIController::DriveTowardTarget(float DeltaTime) const
 	
 	if (DistToTarget <= StoppingDistance)
 	{
-		ControlledVehicle->Steer(0.f);
-		ControlledVehicle->Throttle(0.f);
-		ControlledVehicle->Brake(1.f);
+		ZeroInputs();
+		VehicleInput->ApplyBrake(1.0f);
+		return;
 	}
 	
-	const FVector ForwardVector = VehiclePawn->GetActorForwardVector();
+	const FVector ForwardVector = ControlledPawn->GetActorForwardVector();
 	const FVector ToTargetNormalized = ToTarget.GetSafeNormal();
 
 	const float ForwardDot = FVector::DotProduct(ForwardVector, ToTargetNormalized);
-	const float RightDot = FVector::DotProduct(VehiclePawn->GetActorRightVector(), ToTargetNormalized);
+	const float RightDot = FVector::DotProduct(ControlledPawn->GetActorRightVector(), ToTargetNormalized);
 
 	float SteeringValue = FMath::Clamp(RightDot * SteeringSensitivity, -1.f, 1.f);
 	
@@ -68,9 +74,18 @@ void ACVehicleAIController::DriveTowardTarget(float DeltaTime) const
 		SteeringValue = FMath::Clamp(SteeringValue * 1.5f, -1.f, 1.f);
 	}
 
-	ControlledVehicle->Steer(SteeringValue);
-	ControlledVehicle->Throttle(MaxThrottle);
-	ControlledVehicle->Brake(0.f);
+	VehicleInput->ApplySteer(SteeringValue);
+	VehicleInput->ApplyThrottle(MaxThrottle);
+	VehicleInput->ApplyBrake(0.f);
+	
 }
 
+void ACVehicleAIController::ZeroInputs() const
+{
+	if (!VehicleInput) return;
+
+	VehicleInput->ApplySteer(0.f);
+	VehicleInput->ApplyThrottle(0.f);
+	VehicleInput->ApplyBrake(0.f);
+}
 

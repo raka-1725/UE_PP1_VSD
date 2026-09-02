@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Vehicle/CVehiclePawn.h"
 #include "AIController.h"
+#include "Vehicle/VehicleInputInterface.h"
 #include "CVehicleAIController.generated.h"
 
-
+class ACVehiclePawn;
 /**
  * 
  */
@@ -35,8 +35,12 @@ public:
 	AActor* TargetActor = nullptr;
 	
 private:
+	IVehicleInputInterface* VehicleInput = nullptr;
+	
 	UPROPERTY()
-	ACVehiclePawn* ControlledVehicle = nullptr;
+	APawn* ControlledPawn = nullptr;
 
 	void DriveTowardTarget(float DeltaTime) const;
+	
+	void ZeroInputs() const;
 };
