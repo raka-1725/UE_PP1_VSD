@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InputActionValue.h"
 #include "WheeledVehiclePawn.h"
+#include "InputActionValue.h"
 
 #include "Vehicle/VehicleInputInterface.h"
 
@@ -14,7 +14,7 @@
  * 
  */
 UCLASS()
-class ACVehiclePawn : public AWheeledVehiclePawn
+class ACVehiclePawn : public AWheeledVehiclePawn, public IVehicleInputInterface
 {
 	GENERATED_BODY()
 public:
@@ -40,22 +40,10 @@ public:
 	virtual bool IsPlayerDriving() const override;
 	
 	
-//control input | player
-	void Steer(const FInputActionValue& val);
-	void Throttle(const FInputActionValue& val);
-	void Brake(const FInputActionValue& val);
+//Input
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputMappingContext* VehicleMappingContext;
 	
-	
-
-private:
-	//Camera
-	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
-	class USpringArmComponent* CameraBoom;
-	
-	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
-	class UCameraComponent* ViewCam;
-	
-	//Input
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* SteerInputAction;
 	
@@ -65,10 +53,28 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* BrakeInputAction;
 	
-	//AI Controller
-	UPROPERTY(VisibleDefaultsOnly, Category = "AIController")
-	TSubclassOf<class ACVehicleAIController> VehicleAIController;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	int32 MappingPriority = 0;
+	
+
+private:
+	//Only player
+	void Input_Steer(const FInputActionValue& value);
+	void Input_Throttle(const FInputActionValue& Val);
+	void Input_Brake(const FInputActionValue& Val);
+	
+	void AddMappingContext(APlayerController* PlayerController);
+	void RemoveMappingContext(APlayerController* PlayerController);
 	
 	
+	//Camera
+	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
+	class USpringArmComponent* CameraBoom;
+	
+	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
+	class UCameraComponent* ViewCam;
+	
+	UPROPERTY()
+	bool bIsPlayerDriving = false;
 	
 };
