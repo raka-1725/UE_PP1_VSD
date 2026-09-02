@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "WheeledVehiclePawn.h"
+#include "InputMappingContext.h"
 #include "InputActionValue.h"
 
 #include "Vehicle/VehicleInputInterface.h"
@@ -31,7 +32,7 @@ public:
 	
 // VehicleInputinterface
 
-	virtual void ApplySteering(float Value) override;
+	virtual void ApplySteer(float Value) override;
 	virtual void ApplyThrottle(float Value) override;
 	virtual void ApplyBrake(float Value) override;
 	virtual void OnPlayerControl() override;

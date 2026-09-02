@@ -47,7 +47,7 @@ void ACVehiclePawn::PossessedBy(AController* NewController)
 		OnPlayerControl();
 		AddMappingContext(PlayerController);
 	}
-	else if (NewController = Cast<AAIController>(NewController))
+	else if (AAIController* AIController = Cast<AAIController>(NewController))
 	{
 		OnAIControl();
 	}
@@ -90,7 +90,7 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 }
 
 //Interface
-void ACVehiclePawn::ApplySteering(float Value)
+void ACVehiclePawn::ApplySteer(float Value)
 {
 	if (UChaosWheeledVehicleMovementComponent* MovementComponent =
 		Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
@@ -129,7 +129,7 @@ void ACVehiclePawn::OnAIControl()
 
 void ACVehiclePawn::OnControlReleased()
 {
-	ApplySteering(0.f);
+	ApplySteer(0.f);
 	ApplyThrottle(0.f);
 	ApplyBrake(0.f);
 }
@@ -173,7 +173,7 @@ void ACVehiclePawn::RemoveMappingContext(APlayerController* PlayerController)
 //Input handle
 void ACVehiclePawn::Input_Steer(const FInputActionValue& value)
 {
-	ApplySteering(value.Get<float>());
+	ApplySteer(value.Get<float>());
 }
 
 void ACVehiclePawn::Input_Throttle(const FInputActionValue& value)
