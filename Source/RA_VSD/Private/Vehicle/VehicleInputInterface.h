@@ -33,9 +33,9 @@ public:
 	virtual bool IsPlayerDriving() const = 0;
 	
 	//Enter / Exit
-	/*
+	
 	virtual void EnterVehicle(AController* NewDriver) = 0;
 	virtual void ExitVehicle(AController* Exit) = 0;
 	virtual bool CanEnterVehicle() const = 0;
-	*/
+	
 };

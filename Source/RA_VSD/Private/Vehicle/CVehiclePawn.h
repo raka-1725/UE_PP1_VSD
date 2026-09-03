@@ -39,6 +39,9 @@ public:
 	virtual void OnAIControl() override;
 	virtual void OnControlReleased() override;
 	virtual bool IsPlayerDriving() const override;
+	virtual bool CanEnterVehicle() const override;
+	virtual void EnterVehicle(AController* NewDriver) override;
+	virtual void ExitVehicle(AController* Exit) override;
 	
 	
 //Input
@@ -55,6 +58,9 @@ public:
 	class UInputAction* BrakeInputAction;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* VehicleInteractAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	int32 MappingPriority = 0;
 	
 
@@ -63,6 +69,7 @@ private:
 	void Input_Steer(const FInputActionValue& value);
 	void Input_Throttle(const FInputActionValue& Val);
 	void Input_Brake(const FInputActionValue& Val);
+	void Input_InteractVehicle();
 	
 	void AddMappingContext(APlayerController* PlayerController);
 	void RemoveMappingContext(APlayerController* PlayerController);
@@ -75,7 +82,14 @@ private:
 	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
 	class UCameraComponent* ViewCam;
 	
+	
 	UPROPERTY()
 	bool bIsPlayerDriving = false;
+
+//for mp
+	UPROPERTY()
+	APlayerCharacter* StoredDriver = nullptr;
 	
+	UPROPERTY(Replicated)
+	TArray<AController*> Passengers;
 };

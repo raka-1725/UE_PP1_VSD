@@ -23,10 +23,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-/*
+
 	void TryEnterVehicle();
 	void OnExitVehicle(FTransform ExitVehicleTransform);
-*/	
+
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	class UInputMappingContext* CharacterMappingContext;
 	
@@ -40,7 +40,7 @@ public:
 	class UInputAction* VehicleInteractAction;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Vehicle")
-	float InteractRaius = 300.0f;
+	float InteractRadius = 300.0f;
 	
 private:
 	void Input_Move(const struct FInputActionValue& value);

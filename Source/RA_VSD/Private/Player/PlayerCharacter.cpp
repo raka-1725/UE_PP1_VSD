@@ -5,6 +5,13 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Vehicle/VehicleInputInterface.h"
+
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Controller.h"
+#include "Engine/OverlapResult.h"
+#include "DrawDebugHelpers.h"
+#include "Vehicle/CVehiclePawn.h"
 
 
 APlayerCharacter::APlayerCharacter()
@@ -53,9 +60,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	if (LookAction)
 		EIC->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Input_Look);
 
-	//if (VehicleInteractAction)
-		//EIC->BindAction(VehicleInteractAction, ETriggerEvent::Started, this, &APlayerCharacter::TryEnterVehicle);
+	if (VehicleInteractAction)
+		EIC->BindAction(VehicleInteractAction, ETriggerEvent::Started, this, &APlayerCharacter::TryEnterVehicle);
 }
+
 
 void APlayerCharacter::Input_Move(const struct FInputActionValue& value)
 {
@@ -71,4 +79,58 @@ void APlayerCharacter::Input_Look(const struct FInputActionValue& value)
 	AddControllerYawInput(Axis.X);
 	AddControllerPitchInput(Axis.Y);
 }
+
+void APlayerCharacter::TryEnterVehicle()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+	
+	TArray<FOverlapResult> Overlaps;
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractRadius);
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	
+	World->OverlapMultiByChannel(
+		Overlaps,
+		GetActorLocation(),
+		FQuat::Identity,
+		ECC_Pawn,
+		Sphere,
+		Params);
+	
+	for (const FOverlapResult& Hit : Overlaps)
+	{
+		ACVehiclePawn* Vehicle = Cast<ACVehiclePawn>(Hit.GetActor());
+		if (!Vehicle) continue;
+		
+		IVehicleInputInterface* VehicleInput = Cast<IVehicleInputInterface>(Vehicle);
+		
+		if (!VehicleInput->CanEnterVehicle(this)) continue;
+		
+		AController* MyController = GetController();
+		if (!MyController) return;
+		
+		CurrentVehicle = Vehicle;
+		
+		SetActorHiddenInGame(true);
+		SetActorEnableCollision(false);
+		GetCharacterMovement()->DisableMovement();
+		
+		VehicleInput->EnterVehicle(MyController);
+		return;
+	}
+}
+
+void APlayerCharacter::OnExitVehicle(FTransform ExitVehicleTransform)
+{
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+	SetActorTransform(ExitVehicleTransform, false, nullptr, ETeleportType::TeleportPhysics);
+
+	CurrentVehicle = nullptr;
+}
+
+
 
