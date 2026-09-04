@@ -48,4 +48,10 @@ private:
 	
 	UPROPERTY()
 	ACVehiclePawn* CurrentVehicle = nullptr;
+	
+	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
+	class USpringArmComponent* CameraBoom;
+	
+	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
+	class UCameraComponent* ViewCam;
 };

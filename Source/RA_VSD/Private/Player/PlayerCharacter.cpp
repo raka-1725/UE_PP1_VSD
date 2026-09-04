@@ -13,11 +13,21 @@
 #include "DrawDebugHelpers.h"
 #include "Vehicle/CVehiclePawn.h"
 
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
 
 APlayerCharacter::APlayerCharacter()
 {
  	
 	PrimaryActorTick.bCanEverTick = true;
+	
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>("Camera Boom");
+	CameraBoom->SetupAttachment(GetRootComponent());
+	
+	ViewCam = CreateDefaultSubobject<UCameraComponent>("View Cam");
+	ViewCam->SetupAttachment(CameraBoom,USpringArmComponent::SocketName);
+	
 
 }
 
