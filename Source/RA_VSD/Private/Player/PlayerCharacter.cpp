@@ -103,9 +103,7 @@ void APlayerCharacter::TryEnterVehicle()
 		ACVehiclePawn* Vehicle = Cast<ACVehiclePawn>(Hit.GetActor());
 		if (!Vehicle) continue;
 		
-		IVehicleInputInterface* VehicleInput = Cast<IVehicleInputInterface>(Vehicle);
-		
-		if (!VehicleInput->CanEnterVehicle(this)) continue;
+		if (!Vehicle->CanEnterVehicle(this)) continue;
 		
 		AController* MyController = GetController();
 		if (!MyController) return;
@@ -116,7 +114,7 @@ void APlayerCharacter::TryEnterVehicle()
 		SetActorEnableCollision(false);
 		GetCharacterMovement()->DisableMovement();
 		
-		VehicleInput->EnterVehicle(MyController);
+		Vehicle->EnterVehicle(MyController);
 		return;
 	}
 }

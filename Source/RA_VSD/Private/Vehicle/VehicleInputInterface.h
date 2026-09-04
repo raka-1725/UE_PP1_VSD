@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Player/PlayerCharacter.h"
 #include "UObject/Interface.h"
 #include "VehicleInputInterface.generated.h"
 
@@ -36,6 +37,5 @@ public:
 	
 	virtual void EnterVehicle(AController* NewDriver) = 0;
 	virtual void ExitVehicle(AController* Exit) = 0;
-	virtual bool CanEnterVehicle() const = 0;
-	
+	virtual bool CanEnterVehicle(APlayerCharacter* PlayerCharacter) const = 0;
 };

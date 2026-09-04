@@ -11,6 +11,7 @@
 
 #include "CVehiclePawn.generated.h"
 
+class APlayerCharacter;
 /**
  * 
  */
@@ -39,7 +40,7 @@ public:
 	virtual void OnAIControl() override;
 	virtual void OnControlReleased() override;
 	virtual bool IsPlayerDriving() const override;
-	virtual bool CanEnterVehicle() const override;
+	virtual bool CanEnterVehicle(APlayerCharacter* PlayerCharacter) const override;
 	virtual void EnterVehicle(AController* NewDriver) override;
 	virtual void ExitVehicle(AController* Exit) override;
 	
@@ -62,6 +63,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	int32 MappingPriority = 0;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicle")
+	FVector ExitOffset = FVector(0.f, 200.f, 100.f);
 	
 
 private:
@@ -90,6 +94,6 @@ private:
 	UPROPERTY()
 	APlayerCharacter* StoredDriver = nullptr;
 	
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	TArray<AController*> Passengers;
 };

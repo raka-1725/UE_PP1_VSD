@@ -7,6 +7,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
+#include "Player/PlayerCharacter.h"
+
 #include "AI/CVehicleAIController.h"
 
 #include "ChaosWheeledVehicleMovementComponent.h"
@@ -59,9 +61,9 @@ void ACVehiclePawn::UnPossessed()
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 		RemoveMappingContext(PlayerController);
+		OnControlReleased();
 	}
 	
-	OnControlReleased();
 }
 
 
@@ -85,6 +87,11 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 		if (BrakeInputAction)
 		{
 			EnhancedInputComponent->BindAction(BrakeInputAction, ETriggerEvent::Triggered,this, &ACVehiclePawn::Input_Brake);
+		}
+		
+		if (VehicleInteractAction)
+		{
+			EnhancedInputComponent->BindAction(VehicleInteractAction, ETriggerEvent::Triggered, this, &ACVehiclePawn::Input_InteractVehicle);
 		}
 	}
 }
@@ -132,11 +139,47 @@ void ACVehiclePawn::OnControlReleased()
 	ApplySteer(0.f);
 	ApplyThrottle(0.f);
 	ApplyBrake(0.f);
+	bIsPlayerDriving = false;
 }
 
 bool ACVehiclePawn::IsPlayerDriving() const
 {
 	return bIsPlayerDriving;
+}
+
+bool ACVehiclePawn::CanEnterVehicle(APlayerCharacter* PlayerCharacter) const
+{
+	if (bIsPlayerDriving) return false;
+	
+	return true;
+}
+
+void ACVehiclePawn::EnterVehicle(AController* NewDriver)
+{
+	if (!NewDriver) return;
+	
+	StoredDriver = Cast<APlayerCharacter>(NewDriver->GetPawn());
+}
+
+void ACVehiclePawn::ExitVehicle(AController* Exit)
+{
+	if (!Exit) return;
+	
+	RemoveMappingContext(Cast<APlayerController>(Exit));
+	OnControlReleased();
+	
+	const FTransform VehicleTransform = GetActorTransform();
+	const FVector WorldOffset = VehicleTransform.TransformVector(ExitOffset);
+	const FTransform ExitTransform = FTransform(
+		FRotator(0.0f, GetActorRotation().Yaw, 0.0f).Quaternion(),
+		GetActorLocation() + WorldOffset);
+	
+	if (StoredDriver)
+	{
+		Exit->Possess(StoredDriver);
+		StoredDriver->OnExitVehicle(ExitTransform);
+		StoredDriver = nullptr;
+	}
 }
 
 
@@ -184,6 +227,11 @@ void ACVehiclePawn::Input_Throttle(const FInputActionValue& value)
 void ACVehiclePawn::Input_Brake(const FInputActionValue& value)
 {
 	ApplyBrake(value.Get<float>());
+}
+
+void ACVehiclePawn::Input_InteractVehicle()
+{
+	ExitVehicle(GetController());
 }
 
 
