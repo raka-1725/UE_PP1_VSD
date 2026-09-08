@@ -159,6 +159,8 @@ void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 	if (!NewDriver) return;
 	
 	StoredDriver = Cast<APlayerCharacter>(NewDriver->GetPawn());
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Enter vehicle"));
 }
 
 void ACVehiclePawn::ExitVehicle(AController* Exit)
@@ -195,6 +197,7 @@ void ACVehiclePawn::AddMappingContext(APlayerController* PlayerController)
 		{
 			if (VehicleMappingContext)
 				Sub->AddMappingContext(VehicleMappingContext, MappingPriority);
+				UE_LOG(LogTemp, Warning, TEXT("AddMappingContext for Vehicle"));
 		}
 	}
 }
@@ -231,6 +234,7 @@ void ACVehiclePawn::Input_Brake(const FInputActionValue& value)
 
 void ACVehiclePawn::Input_InteractVehicle()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Exit vehicle"));
 	ExitVehicle(GetController());
 }
 

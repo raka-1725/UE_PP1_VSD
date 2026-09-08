@@ -95,6 +95,8 @@ void APlayerCharacter::TryEnterVehicle()
 	UWorld* World = GetWorld();
 	if (!World) return;
 	
+	UE_LOG(LogTemp, Warning, TEXT("Enter vehicle"));
+	
 	TArray<FOverlapResult> Overlaps;
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractRadius);
 	FCollisionQueryParams Params;
@@ -117,14 +119,16 @@ void APlayerCharacter::TryEnterVehicle()
 		
 		AController* MyController = GetController();
 		if (!MyController) return;
+		UE_LOG(LogTemp, Warning, TEXT("Vehicle Found"));
 		
 		CurrentVehicle = Vehicle;
 		
+		Vehicle->EnterVehicle(MyController);
 		SetActorHiddenInGame(true);
+		
 		SetActorEnableCollision(false);
 		GetCharacterMovement()->DisableMovement();
 		
-		Vehicle->EnterVehicle(MyController);
 		return;
 	}
 	
@@ -133,6 +137,7 @@ void APlayerCharacter::TryEnterVehicle()
 
 void APlayerCharacter::OnExitVehicle(FTransform ExitVehicleTransform)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Exiting Vehicle"));
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
