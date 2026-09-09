@@ -123,12 +123,12 @@ void APlayerCharacter::TryEnterVehicle()
 		
 		CurrentVehicle = Vehicle;
 		
-		Vehicle->EnterVehicle(MyController);
 		SetActorHiddenInGame(true);
-		
 		SetActorEnableCollision(false);
+		
 		GetCharacterMovement()->DisableMovement();
 		
+		Vehicle->EnterVehicle(MyController);
 		return;
 	}
 	

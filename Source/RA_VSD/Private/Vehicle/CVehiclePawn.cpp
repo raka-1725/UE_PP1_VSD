@@ -15,6 +15,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ACVehiclePawn::ACVehiclePawn()
 {
@@ -44,6 +45,8 @@ void ACVehiclePawn::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	
+	UE_LOG(LogTemp, Warning, TEXT("PossessedBy: %s"), *GetNameSafe(NewController));
+
 	if (APlayerController* PlayerController = Cast<APlayerController>(NewController))
 	{
 		OnPlayerControl();
@@ -150,7 +153,7 @@ bool ACVehiclePawn::IsPlayerDriving() const
 bool ACVehiclePawn::CanEnterVehicle(APlayerCharacter* PlayerCharacter) const
 {
 	if (bIsPlayerDriving) return false;
-	
+	UE_LOG(LogTemp, Warning, TEXT("Can enter vehicle %d"), bIsPlayerDriving);
 	return true;
 }
 
@@ -159,13 +162,25 @@ void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 	if (!NewDriver) return;
 	
 	StoredDriver = Cast<APlayerCharacter>(NewDriver->GetPawn());
+	if (!StoredDriver)
+	{
+		UE_LOG(LogTemp, Error, TEXT("No Stored Driver"));
+		return;
+	};
+
+	APlayerController* PlayerController = Cast<APlayerController>(NewDriver);
+	NewDriver->Possess(this);
 	
-	//UE_LOG(LogTemp, Warning, TEXT("Enter vehicle"));
+	if (!PlayerController) return;
+	
+	PlayerController->SetViewTargetWithBlend(this,0.5f,EViewTargetBlendFunction::VTBlend_Cubic,0.f,true);;
+	UE_LOG(LogTemp, Warning, TEXT("EnterVehicle: Possessed by %s"), *GetNameSafe(NewDriver));
 }
 
 void ACVehiclePawn::ExitVehicle(AController* Exit)
 {
-	if (!Exit) return;
+	if (!Exit || !StoredDriver) return;
+	APlayerController* PlayerController = Cast<APlayerController>(Exit);
 	
 	RemoveMappingContext(Cast<APlayerController>(Exit));
 	OnControlReleased();
@@ -176,12 +191,18 @@ void ACVehiclePawn::ExitVehicle(AController* Exit)
 		FRotator(0.0f, GetActorRotation().Yaw, 0.0f).Quaternion(),
 		GetActorLocation() + WorldOffset);
 	
-	if (StoredDriver)
-	{
-		Exit->Possess(StoredDriver);
-		StoredDriver->OnExitVehicle(ExitTransform);
-		StoredDriver = nullptr;
-	}
+	StoredDriver->SetActorHiddenInGame(false);
+	StoredDriver->SetActorEnableCollision(true);
+	StoredDriver->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	StoredDriver->SetActorTransform(ExitTransform, false, nullptr, ETeleportType::TeleportPhysics);
+	
+	Exit->Possess(StoredDriver);
+	
+	PlayerController->SetViewTargetWithBlend(StoredDriver,0.3f,EViewTargetBlendFunction::VTBlend_Linear,0.f,true);
+	UE_LOG(LogTemp, Warning, TEXT("ExitVehicle: Returned control to %s"), *GetNameSafe(StoredDriver));
+	
+	StoredDriver = nullptr;
+	OnControlReleased();
 }
 
 
@@ -196,8 +217,14 @@ void ACVehiclePawn::AddMappingContext(APlayerController* PlayerController)
 			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
 			if (VehicleMappingContext)
+			{
 				Sub->AddMappingContext(VehicleMappingContext, MappingPriority);
 				UE_LOG(LogTemp, Warning, TEXT("AddMappingContext for Vehicle"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("AddMappingContext: VehicleMappingContext is null"));
+			}
 		}
 	}
 }
