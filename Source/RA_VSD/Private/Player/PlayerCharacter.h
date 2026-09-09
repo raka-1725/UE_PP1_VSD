@@ -26,6 +26,9 @@ public:
 
 	void TryEnterVehicle();
 	void OnExitVehicle(FTransform ExitVehicleTransform);
+	
+	void EnableCharacterInput(APlayerController* PlayerController);
+	void DisableCharacterInput(APlayerController* PlayerController);
 
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	class UInputMappingContext* CharacterMappingContext;

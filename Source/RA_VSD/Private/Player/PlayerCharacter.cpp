@@ -147,5 +147,39 @@ void APlayerCharacter::OnExitVehicle(FTransform ExitVehicleTransform)
 	CurrentVehicle = nullptr;
 }
 
+void APlayerCharacter::EnableCharacterInput(APlayerController* PlayerController)
+{
+	if (!PlayerController) return;
+	
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!LocalPlayer) return;
+	
+	UEnhancedInputLocalPlayerSubsystem* Sub =
+		LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	
+	if (!Sub) return;
+	if (CharacterMappingContext)
+	{
+		Sub->AddMappingContext(CharacterMappingContext, 0);
+	}
+}
+
+void APlayerCharacter::DisableCharacterInput(APlayerController* PlayerController)
+{
+	if (!PlayerController) return;
+	
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!LocalPlayer) return;
+	
+	UEnhancedInputLocalPlayerSubsystem* Sub =
+		LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	
+	if (!Sub) return;
+	if (CharacterMappingContext)
+	{
+		Sub->RemoveMappingContext(CharacterMappingContext);
+	}
+}
+
 
 

@@ -169,9 +169,12 @@ void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 	};
 
 	APlayerController* PlayerController = Cast<APlayerController>(NewDriver);
+	if (!PlayerController) return;
+	
+	StoredDriver->DisableCharacterInput(PlayerController);
+	
 	NewDriver->Possess(this);
 	
-	if (!PlayerController) return;
 	
 	PlayerController->SetViewTargetWithBlend(this,0.5f,EViewTargetBlendFunction::VTBlend_Cubic,0.f,true);;
 	UE_LOG(LogTemp, Warning, TEXT("EnterVehicle: Possessed by %s"), *GetNameSafe(NewDriver));
@@ -182,7 +185,7 @@ void ACVehiclePawn::ExitVehicle(AController* Exit)
 	if (!Exit || !StoredDriver) return;
 	APlayerController* PlayerController = Cast<APlayerController>(Exit);
 	
-	RemoveMappingContext(Cast<APlayerController>(Exit));
+	RemoveMappingContext(PlayerController);
 	OnControlReleased();
 	
 	const FTransform VehicleTransform = GetActorTransform();
@@ -198,11 +201,11 @@ void ACVehiclePawn::ExitVehicle(AController* Exit)
 	
 	Exit->Possess(StoredDriver);
 	
+	StoredDriver->EnableCharacterInput(PlayerController);
 	PlayerController->SetViewTargetWithBlend(StoredDriver,0.3f,EViewTargetBlendFunction::VTBlend_Linear,0.f,true);
 	UE_LOG(LogTemp, Warning, TEXT("ExitVehicle: Returned control to %s"), *GetNameSafe(StoredDriver));
 	
 	StoredDriver = nullptr;
-	OnControlReleased();
 }
 
 
@@ -211,35 +214,35 @@ void ACVehiclePawn::ExitVehicle(AController* Exit)
 void ACVehiclePawn::AddMappingContext(APlayerController* PlayerController)
 {
 	if (!PlayerController) return;
-	if (ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer())
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!LocalPlayer) return;
+	
+	UEnhancedInputLocalPlayerSubsystem* Sub =
+		LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	if (!Sub) return;
+	
+	if (VehicleMappingContext)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Sub =
-			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			if (VehicleMappingContext)
-			{
-				Sub->AddMappingContext(VehicleMappingContext, MappingPriority);
-				UE_LOG(LogTemp, Warning, TEXT("AddMappingContext for Vehicle"));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("AddMappingContext: VehicleMappingContext is null"));
-			}
-		}
+		Sub->AddMappingContext(VehicleMappingContext, MappingPriority);
+		UE_LOG(LogTemp, Warning, TEXT("AddMappingContext for Vehicle"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("AddMappingContext: VehicleMappingContext is null"));
 	}
 }
 
 void ACVehiclePawn::RemoveMappingContext(APlayerController* PlayerController)
 {
-	if (ULocalPlayer* LP = PlayerController->GetLocalPlayer())
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Sub =
-			LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			if (VehicleMappingContext)
-				Sub->RemoveMappingContext(VehicleMappingContext);
-		}
-	}
+	if (!PlayerController) return;
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!LocalPlayer) return;
+	
+	UEnhancedInputLocalPlayerSubsystem* Sub =
+		LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+
+	if (VehicleMappingContext)
+		Sub->RemoveMappingContext(VehicleMappingContext);
 }
 
 
