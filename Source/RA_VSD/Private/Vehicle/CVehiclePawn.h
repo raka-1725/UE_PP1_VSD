@@ -61,8 +61,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* VehicleInteractAction;
 	
+	//priority higher than player
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	int32 MappingPriority = 0;
+	int32 MappingPriority = 1;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Vehicle")
 	FVector ExitOffset = FVector(0.f, 200.f, 100.f);
@@ -86,9 +87,12 @@ private:
 	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
 	class UCameraComponent* ViewCam;
 	
-	
 	UPROPERTY()
 	bool bIsPlayerDriving = false;
+	
+	bool bCanExitVehicle = false;
+	
+	bool bIgnoreInteractInput = false;
 
 //for mp
 	UPROPERTY()
@@ -96,4 +100,5 @@ private:
 	
 	UPROPERTY()
 	TArray<AController*> Passengers;
+	
 };

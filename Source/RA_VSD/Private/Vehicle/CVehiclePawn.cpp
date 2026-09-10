@@ -39,6 +39,8 @@ void ACVehiclePawn::BeginPlay()
 void ACVehiclePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (bCanExitVehicle) bIgnoreInteractInput = false;
 }
 //Possesion
 void ACVehiclePawn::PossessedBy(AController* NewController)
@@ -80,6 +82,11 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 		if (SteerInputAction)
 		{
 			EnhancedInputComponent->BindAction(SteerInputAction, ETriggerEvent::Triggered,this, &ACVehiclePawn::Input_Steer);
+			UE_LOG(LogTemp,Warning, TEXT("Steering Input bind"));
+		}
+		else
+		{
+			UE_LOG(LogTemp,Error, TEXT("Steering Input not bind"));
 		}
 		
 		if (ThrottleInputAction)
@@ -94,7 +101,7 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 		
 		if (VehicleInteractAction)
 		{
-			EnhancedInputComponent->BindAction(VehicleInteractAction, ETriggerEvent::Triggered, this, &ACVehiclePawn::Input_InteractVehicle);
+			EnhancedInputComponent->BindAction(VehicleInteractAction, ETriggerEvent::Started, this, &ACVehiclePawn::Input_InteractVehicle);
 		}
 	}
 }
@@ -115,6 +122,7 @@ void ACVehiclePawn::ApplyThrottle(float Value)
 	Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
 	{
 		MovementComponent->SetThrottleInput(Value);
+		UE_LOG(LogTemp, Warning, TEXT("Throttle Value: %f"), Value);
 	}
 }
 
@@ -152,7 +160,7 @@ bool ACVehiclePawn::IsPlayerDriving() const
 
 bool ACVehiclePawn::CanEnterVehicle(APlayerCharacter* PlayerCharacter) const
 {
-	if (bIsPlayerDriving) return false;
+	if (bIsPlayerDriving || StoredDriver != nullptr) return false;
 	UE_LOG(LogTemp, Warning, TEXT("Can enter vehicle %d"), bIsPlayerDriving);
 	return true;
 }
@@ -160,6 +168,7 @@ bool ACVehiclePawn::CanEnterVehicle(APlayerCharacter* PlayerCharacter) const
 void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 {
 	if (!NewDriver) return;
+	if (bIsPlayerDriving || StoredDriver != nullptr) return;
 	
 	StoredDriver = Cast<APlayerCharacter>(NewDriver->GetPawn());
 	if (!StoredDriver)
@@ -177,12 +186,16 @@ void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 	
 	
 	PlayerController->SetViewTargetWithBlend(this,0.5f,EViewTargetBlendFunction::VTBlend_Cubic,0.f,true);;
+	
+	bCanExitVehicle = true;
+	bIgnoreInteractInput = true;
+	
 	UE_LOG(LogTemp, Warning, TEXT("EnterVehicle: Possessed by %s"), *GetNameSafe(NewDriver));
 }
 
 void ACVehiclePawn::ExitVehicle(AController* Exit)
 {
-	if (!Exit || !StoredDriver) return;
+	if (!Exit || !StoredDriver ||!bCanExitVehicle) return;
 	APlayerController* PlayerController = Cast<APlayerController>(Exit);
 	
 	RemoveMappingContext(PlayerController);
@@ -264,6 +277,7 @@ void ACVehiclePawn::Input_Brake(const FInputActionValue& value)
 
 void ACVehiclePawn::Input_InteractVehicle()
 {
+	if (!bCanExitVehicle || bIgnoreInteractInput) {UE_LOG(LogTemp, Warning, TEXT("Exit vehicle return")); return;}
 	UE_LOG(LogTemp, Warning, TEXT("Exit vehicle"));
 	ExitVehicle(GetController());
 }

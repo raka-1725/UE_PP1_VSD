@@ -77,6 +77,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Input_Move(const struct FInputActionValue& value)
 {
+	if (!Controller) return;
+	
 	FVector2D Axis = value.Get<FVector2D>();
 	const FRotator Yaw(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
 	AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::X), Axis.Y);
