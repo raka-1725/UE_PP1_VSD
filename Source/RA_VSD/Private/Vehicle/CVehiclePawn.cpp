@@ -110,7 +110,7 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 void ACVehiclePawn::ApplySteer(float Value)
 {
 	if (UChaosWheeledVehicleMovementComponent* MovementComponent =
-		Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
+	Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
 	{
 		MovementComponent->SetSteeringInput(Value);
 	}
@@ -118,12 +118,19 @@ void ACVehiclePawn::ApplySteer(float Value)
 
 void ACVehiclePawn::ApplyThrottle(float Value)
 {
-	if (UChaosWheeledVehicleMovementComponent* MovementComponent =
-	Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
-	{
-		MovementComponent->SetThrottleInput(Value);
-		UE_LOG(LogTemp, Warning, TEXT("Throttle Value: %f"), Value);
-	}
+	UChaosVehicleMovementComponent* MC = GetVehicleMovementComponent();
+	if (!MC) { UE_LOG(LogTemp, Error, TEXT("MC NULL")); return; }
+
+	UChaosWheeledVehicleMovementComponent* WMC = 
+		Cast<UChaosWheeledVehicleMovementComponent>(MC);
+    
+	UE_LOG(LogTemp, Warning, TEXT("Throttle | IsLocal:%d | IsSleeping:%d | HasControl:%d | Value:%.2f"),
+		IsLocallyControlled(),
+		GetMesh() ? !GetMesh()->IsAnyRigidBodyAwake() : false,
+		MC->HasBeenInitialized(),
+		Value);
+
+	WMC->SetThrottleInput(Value);
 }
 
 void ACVehiclePawn::ApplyBrake(float Value)
@@ -267,6 +274,7 @@ void ACVehiclePawn::Input_Steer(const FInputActionValue& value)
 
 void ACVehiclePawn::Input_Throttle(const FInputActionValue& value)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Input_Throttle: %.2f"), value.Get<float>());
 	ApplyThrottle(value.Get<float>());
 }
 
