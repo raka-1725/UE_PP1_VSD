@@ -28,13 +28,32 @@ ACVehiclePawn::ACVehiclePawn()
 	//disable for player, enable for ai
 	AIControllerClass = ACVehicleAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::Disabled;
+	
 }	
 
 
 void ACVehiclePawn::BeginPlay()
 {
 	Super::BeginPlay();
+	CacheMovementComponent();
+	
+	if (USkeletalMeshComponent* VMesh = GetMesh())
+	{
+		VMesh->WakeAllRigidBodies();
+	}
+	
+	UChaosWheeledVehicleMovementComponent* FromGetter = 
+		  Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent());
+    
+	UChaosWheeledVehicleMovementComponent* FromFind =
+		FindComponentByClass<UChaosWheeledVehicleMovementComponent>();
+
+	UE_LOG(LogTemp, Warning, TEXT("FromGetter: %p | FromFind: %p | Same: %d"),
+		FromGetter, FromFind, FromGetter == FromFind);
+
+	WheelMovement = FromFind;
 }
+
 
 void ACVehiclePawn::Tick(float DeltaTime)
 {
@@ -42,6 +61,12 @@ void ACVehiclePawn::Tick(float DeltaTime)
 	
 	if (bCanExitVehicle) bIgnoreInteractInput = false;
 }
+
+UChaosWheeledVehicleMovementComponent* ACVehiclePawn::GetWMC() const
+{
+	return FindComponentByClass<UChaosWheeledVehicleMovementComponent>();
+}
+
 //Possesion
 void ACVehiclePawn::PossessedBy(AController* NewController)
 {
@@ -62,20 +87,21 @@ void ACVehiclePawn::PossessedBy(AController* NewController)
 
 void ACVehiclePawn::UnPossessed()
 {
-	Super::UnPossessed();
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 		RemoveMappingContext(PlayerController);
 		OnControlReleased();
 	}
+	Super::UnPossessed();
 	
 }
 
 
 //Input
+
 void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	//Super::SetupPlayerInputComponent(PlayerInputComponent);
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
@@ -106,45 +132,48 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 	}
 }
 
+void ACVehiclePawn::CacheMovementComponent()
+{
+	if (UChaosWheeledVehicleMovementComponent* MC =
+		Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
+	{
+		MovementComponent = MC;
+	}
+}
+
+
 //Interface
 void ACVehiclePawn::ApplySteer(float Value)
 {
-	if (UChaosWheeledVehicleMovementComponent* MovementComponent =
-	Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
-	{
-		MovementComponent->SetSteeringInput(Value);
-	}
+	MovementComponent->SetSteeringInput(Value);
 }
 
 void ACVehiclePawn::ApplyThrottle(float Value)
 {
-	UChaosVehicleMovementComponent* MC = GetVehicleMovementComponent();
-	if (!MC) { UE_LOG(LogTemp, Error, TEXT("MC NULL")); return; }
+	UChaosWheeledVehicleMovementComponent* MC = GetWMC();
+	if (!MC) { UE_LOG(LogTemp, Error, TEXT("ApplyThrottle: MC null")); return; }
 
-	UChaosWheeledVehicleMovementComponent* WMC = 
-		Cast<UChaosWheeledVehicleMovementComponent>(MC);
-    
-	UE_LOG(LogTemp, Warning, TEXT("Throttle | IsLocal:%d | IsSleeping:%d | HasControl:%d | Value:%.2f"),
-		IsLocallyControlled(),
-		GetMesh() ? !GetMesh()->IsAnyRigidBodyAwake() : false,
-		MC->HasBeenInitialized(),
-		Value);
+	if (USkeletalMeshComponent* VMesh = GetMesh())
+		if (!VMesh->IsAnyRigidBodyAwake())
+			VMesh->WakeAllRigidBodies();
 
-	WMC->SetThrottleInput(Value);
+	MC->SetThrottleInput(Value);
 }
 
 void ACVehiclePawn::ApplyBrake(float Value)
 {
-	if (UChaosWheeledVehicleMovementComponent* MovementComponent =
-	Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent()))
-	{
-		MovementComponent->SetBrakeInput(Value);
-	}
+	MovementComponent->SetBrakeInput(Value);
 }
 
 void ACVehiclePawn::OnPlayerControl()
 {
 	bIsPlayerDriving = true;
+	
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		MeshComp->WakeAllRigidBodies();
+		UE_LOG(LogTemp, Warning, TEXT("Rididbody awake"));
+	}
 }
 
 void ACVehiclePawn::OnAIControl()
@@ -274,7 +303,7 @@ void ACVehiclePawn::Input_Steer(const FInputActionValue& value)
 
 void ACVehiclePawn::Input_Throttle(const FInputActionValue& value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Input_Throttle: %.2f"), value.Get<float>());
+	//UE_LOG(LogTemp, Warning, TEXT("Input_Throttle: %.2f"), value.Get<float>());
 	ApplyThrottle(value.Get<float>());
 }
 

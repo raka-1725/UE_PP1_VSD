@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChaosWheeledVehicleMovementComponent.h"
 #include "WheeledVehiclePawn.h"
 #include "InputMappingContext.h"
 #include "InputActionValue.h"
@@ -27,7 +28,14 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	
-//Possession
+//Movementcomponent
+	
+	void CacheMovementComponent();
+	UChaosVehicleMovementComponent* MovementComponent;
+	UChaosWheeledVehicleMovementComponent* WheelMovement;
+	UChaosWheeledVehicleMovementComponent* GetWMC() const;
+
+	//Possession
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
 	
