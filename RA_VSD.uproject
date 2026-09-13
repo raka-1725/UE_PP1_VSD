@@ -29,12 +29,16 @@
 			"Enabled": true
 		},
 		{
-			"Name": "ChaosModularVehicleExamples",
+			"Name": "ChaosVehicles",
 			"Enabled": true
 		},
 		{
+			"Name": "ChaosModularVehicleExamples",
+			"Enabled": false
+		},
+		{
 			"Name": "ChaosModularVehicle",
-			"Enabled": true
+			"Enabled": false
 		}
 	]
 }
