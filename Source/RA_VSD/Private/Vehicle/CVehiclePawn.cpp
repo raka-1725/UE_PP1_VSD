@@ -42,16 +42,59 @@ void ACVehiclePawn::BeginPlay()
 		VMesh->WakeAllRigidBodies();
 	}
 	
-	UChaosWheeledVehicleMovementComponent* FromGetter = 
-		  Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovementComponent());
-    
-	UChaosWheeledVehicleMovementComponent* FromFind =
-		FindComponentByClass<UChaosWheeledVehicleMovementComponent>();
+	UChaosWheeledVehicleMovementComponent* MC = GetWMC();
+	
+	UE_LOG(LogTemp, Warning, TEXT("=== Vehicle Setup ==="));
+	UE_LOG(LogTemp, Warning, TEXT("Mass:%.0f Torque:%.0f RPM:%.0f Ratio:%.2f"),
+		MC->Mass,
+		MC->EngineSetup.MaxTorque,
+		MC->EngineSetup.MaxRPM,
+		MC->TransmissionSetup.FinalRatio);
 
-	UE_LOG(LogTemp, Warning, TEXT("FromGetter: %p | FromFind: %p | Same: %d"),
-		FromGetter, FromFind, FromGetter == FromFind);
+	for (int32 i = 0; i < MC->WheelSetups.Num(); i++)
+	{
+		const FChaosWheelSetup& Setup = MC->WheelSetups[i];
+		if (Setup.WheelClass)
+		{
+			UChaosVehicleWheel* WheelCDO = Setup.WheelClass->GetDefaultObject<UChaosVehicleWheel>();
+			UE_LOG(LogTemp, Warning, TEXT("Wheel[%d] Bone=%s Radius=%.1f Width=%.1f AffectedByEngine=%d SteerAngle=%.1f"),
+				i,
+				*Setup.BoneName.ToString(),
+				WheelCDO->WheelRadius,
+				WheelCDO->WheelWidth,
+				WheelCDO->bAffectedByEngine,
+				WheelCDO->MaxSteerAngle);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Wheel[%d] WheelClass is NULL"), i);
+		}
+	}
+	
+	if (USkeletalMeshComponent* VMesh = GetMesh())
+	{
+		TArray<FName> BoneNames;
+		VMesh->GetBoneNames(BoneNames);
 
-	WheelMovement = FromFind;
+		for (const FName& Bone : BoneNames)
+		{
+			FBodyInstance* BI = VMesh->GetBodyInstance(Bone);
+			if (BI)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Body: %s | Simulates: %d | Mass: %.1f"),
+					*Bone.ToString(),
+					BI->bSimulatePhysics,
+					BI->GetBodyMass());
+			}
+		}
+		
+		VMesh->WakeAllRigidBodies();
+	}
+
+	if (USkeletalMeshComponent* VMesh = GetMesh())
+	{
+		VMesh->WakeAllRigidBodies();
+	}
 }
 
 
@@ -151,7 +194,9 @@ void ACVehiclePawn::ApplySteer(float Value)
 void ACVehiclePawn::ApplyThrottle(float Value)
 {
 	UChaosWheeledVehicleMovementComponent* MC = GetWMC();
-	if (!MC) { UE_LOG(LogTemp, Error, TEXT("ApplyThrottle: MC null")); return; }
+	if (!MC) return;
+
+	//UE_LOG(LogTemp, Warning, TEXT("ApplyThrottle: ptr=%p val=%.2f"), MC, Value);
 
 	if (USkeletalMeshComponent* VMesh = GetMesh())
 		if (!VMesh->IsAnyRigidBodyAwake())
@@ -159,6 +204,7 @@ void ACVehiclePawn::ApplyThrottle(float Value)
 
 	MC->SetThrottleInput(Value);
 }
+
 
 void ACVehiclePawn::ApplyBrake(float Value)
 {
