@@ -76,13 +76,36 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Vehicle")
 	FVector ExitOffset = FVector(0.f, 200.f, 100.f);
 	
+//Lerp Input
+	float ThrottleTarget = 0.f;
+	float BrakeTarget    = 0.f;
+	float SteerTarget    = 0.f;
+	
+	float ThrottleCurrent = 0.f;
+	float BrakeCurrent    = 0.f;
+	float SteerCurrent    = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicle|Input Feel")
+	float ThrottleInterpSpeed = 3.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicle|Input Feel")
+	float BrakeInterpSpeed = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicle|Input Feel")
+	float SteerInterpSpeed = 4.0f;
+	
+	void UpdateVehicleInputs(float DeltaTime);
+	
 private:
 	//Only player
 	void Input_Steer(const FInputActionValue& value);
 	void Input_Throttle(const FInputActionValue& Val);
 	void Input_Brake(const FInputActionValue& Val);
 	void Input_InteractVehicle();
+	
+	void Input_ThrottleReleased(const FInputActionValue& Val);
+	void Input_BrakeReleased(const FInputActionValue& Val);
+	void Input_SteerReleased(const FInputActionValue& Val);
 	
 	void AddMappingContext(APlayerController* PlayerController);
 	void RemoveMappingContext(APlayerController* PlayerController);

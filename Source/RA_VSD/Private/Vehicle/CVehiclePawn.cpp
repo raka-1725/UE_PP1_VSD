@@ -71,23 +71,6 @@ void ACVehiclePawn::BeginPlay()
 		}
 	}
 	
-	if (USkeletalMeshComponent* VMesh = GetMesh())
-	{
-		TArray<UActorComponent*> Components;
-		GetComponents(Components);
-		for (UActorComponent* Comp : Components)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Component: %s | Class: %s"),
-				*Comp->GetName(),
-				*Comp->GetClass()->GetName());
-		}
-
-		UChaosWheeledVehicleMovementComponent* CWMC = GetWMC();
-		UE_LOG(LogTemp, Warning, TEXT("GetWMC: %p | Initialized: %d"),
-			CWMC, CWMC ? MC->HasBeenInitialized() : -1);
-		
-			VMesh->WakeAllRigidBodies();
-	}
 
 	if (USkeletalMeshComponent* VMesh = GetMesh())
 	{
@@ -101,6 +84,7 @@ void ACVehiclePawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	if (bCanExitVehicle) bIgnoreInteractInput = false;
+	if (bIsPlayerDriving) UpdateVehicleInputs(DeltaTime);
 }
 
 UChaosWheeledVehicleMovementComponent* ACVehiclePawn::GetWMC() const
@@ -149,6 +133,7 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 		if (SteerInputAction)
 		{
 			EnhancedInputComponent->BindAction(SteerInputAction, ETriggerEvent::Triggered,this, &ACVehiclePawn::Input_Steer);
+			EnhancedInputComponent->BindAction(SteerInputAction, ETriggerEvent::Completed,this, &ACVehiclePawn::Input_SteerReleased);
 			UE_LOG(LogTemp,Warning, TEXT("Steering Input bind"));
 		}
 		else
@@ -159,11 +144,13 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 		if (ThrottleInputAction)
 		{
 			EnhancedInputComponent->BindAction(ThrottleInputAction, ETriggerEvent::Triggered, this, &ACVehiclePawn::Input_Throttle);
+			EnhancedInputComponent->BindAction(ThrottleInputAction, ETriggerEvent::Completed, this, &ACVehiclePawn::Input_ThrottleReleased);
 		}
 		
 		if (BrakeInputAction)
 		{
 			EnhancedInputComponent->BindAction(BrakeInputAction, ETriggerEvent::Triggered,this, &ACVehiclePawn::Input_Brake);
+			EnhancedInputComponent->BindAction(BrakeInputAction, ETriggerEvent::Completed,this, &ACVehiclePawn::Input_BrakeReleased);
 		}
 		
 		if (VehicleInteractAction)
@@ -195,11 +182,6 @@ void ACVehiclePawn::ApplyThrottle(float Value)
 	if (!MC) return;
 
 	//UE_LOG(LogTemp, Warning, TEXT("ApplyThrottle: ptr=%p val=%.2f"), MC, Value);
-
-	if (USkeletalMeshComponent* VMesh = GetMesh())
-		if (!VMesh->IsAnyRigidBodyAwake())
-			VMesh->WakeAllRigidBodies();
-
 	MC->SetThrottleInput(Value);
 }
 
@@ -230,6 +212,16 @@ void ACVehiclePawn::OnControlReleased()
 	ApplySteer(0.f);
 	ApplyThrottle(0.f);
 	ApplyBrake(0.f);
+	
+	
+	ThrottleTarget = 0.f;
+	BrakeTarget    = 0.f;
+	SteerTarget    = 0.f;
+
+	ThrottleCurrent = 0.f;
+	BrakeCurrent    = 0.f;
+	SteerCurrent    = 0.f;
+	
 	bIsPlayerDriving = false;
 }
 
@@ -339,21 +331,37 @@ void ACVehiclePawn::RemoveMappingContext(APlayerController* PlayerController)
 }
 
 
+void ACVehiclePawn::UpdateVehicleInputs(float DeltaTime)
+{
+	UChaosWheeledVehicleMovementComponent* MC = GetWMC();
+	if (!MC) return;
+	
+	//slow in, fast out
+	const float ThrottleSpeed = ThrottleTarget > ThrottleCurrent ? ThrottleInterpSpeed : ThrottleInterpSpeed * 2.f;
+	ThrottleCurrent = FMath::FInterpTo(ThrottleCurrent, ThrottleTarget, DeltaTime, ThrottleSpeed);
+	BrakeCurrent = FMath::FInterpTo(BrakeCurrent, BrakeTarget, DeltaTime, ThrottleSpeed);
+	SteerCurrent = FMath::FInterpTo(SteerCurrent, SteerTarget, DeltaTime, ThrottleSpeed);
+	
+	ApplyThrottle(ThrottleCurrent);
+	ApplyBrake(BrakeCurrent);
+	ApplySteer(SteerCurrent);
+}
+
 //Input handle
 void ACVehiclePawn::Input_Steer(const FInputActionValue& value)
 {
-	ApplySteer(value.Get<float>());
+	SteerTarget = (value.Get<float>());
 }
 
 void ACVehiclePawn::Input_Throttle(const FInputActionValue& value)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Input_Throttle: %.2f"), value.Get<float>());
-	ApplyThrottle(value.Get<float>());
+	ThrottleTarget = (value.Get<float>());
 }
 
 void ACVehiclePawn::Input_Brake(const FInputActionValue& value)
 {
-	ApplyBrake(value.Get<float>());
+	BrakeTarget = (value.Get<float>());
 }
 
 void ACVehiclePawn::Input_InteractVehicle()
@@ -361,6 +369,21 @@ void ACVehiclePawn::Input_InteractVehicle()
 	if (!bCanExitVehicle || bIgnoreInteractInput) {UE_LOG(LogTemp, Warning, TEXT("Exit vehicle return")); return;}
 	UE_LOG(LogTemp, Warning, TEXT("Exit vehicle"));
 	ExitVehicle(GetController());
+}
+
+void ACVehiclePawn::Input_ThrottleReleased(const FInputActionValue& Val)
+{
+	ThrottleTarget = 0.0f;
+}
+
+void ACVehiclePawn::Input_BrakeReleased(const FInputActionValue& Val)
+{
+	BrakeTarget = 0.0f;
+}
+
+void ACVehiclePawn::Input_SteerReleased(const FInputActionValue& Val)
+{
+	SteerTarget = 0.0f;
 }
 
 
