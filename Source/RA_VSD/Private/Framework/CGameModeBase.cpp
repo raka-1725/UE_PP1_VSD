@@ -3,3 +3,8 @@
 
 #include "Framework/CGameModeBase.h"
 
+ACGameModeBase::ACGameModeBase()
+{
+	
+}
+

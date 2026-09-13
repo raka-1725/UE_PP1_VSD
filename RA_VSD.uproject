@@ -27,14 +27,6 @@
 		{
 			"Name": "ChaosVehiclesPlugin",
 			"Enabled": true
-		},
-		{
-			"Name": "ChaosModularVehicleExamples",
-			"Enabled": false
-		},
-		{
-			"Name": "ChaosModularVehicle",
-			"Enabled": false
 		}
 	]
 }
