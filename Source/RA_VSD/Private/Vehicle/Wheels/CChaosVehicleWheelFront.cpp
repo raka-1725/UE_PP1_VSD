@@ -9,6 +9,7 @@ UCChaosVehicleWheelFront::UCChaosVehicleWheelFront()
 	WheelWidth = 20.0f;
 
 	bAffectedByEngine = true;
+	bAffectedBySteering = true;
 
 	MaxSteerAngle = 50.0f; //0 for rear
 	FrictionForceMultiplier = 3.0f;
