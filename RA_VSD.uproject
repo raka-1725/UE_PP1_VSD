@@ -29,10 +29,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "ChaosVehicles",
-			"Enabled": true
-		},
-		{
 			"Name": "ChaosModularVehicleExamples",
 			"Enabled": false
 		},
