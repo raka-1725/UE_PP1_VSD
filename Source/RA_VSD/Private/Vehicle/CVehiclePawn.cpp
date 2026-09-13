@@ -73,22 +73,20 @@ void ACVehiclePawn::BeginPlay()
 	
 	if (USkeletalMeshComponent* VMesh = GetMesh())
 	{
-		TArray<FName> BoneNames;
-		VMesh->GetBoneNames(BoneNames);
-
-		for (const FName& Bone : BoneNames)
+		TArray<UActorComponent*> Components;
+		GetComponents(Components);
+		for (UActorComponent* Comp : Components)
 		{
-			FBodyInstance* BI = VMesh->GetBodyInstance(Bone);
-			if (BI)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Body: %s | Simulates: %d | Mass: %.1f"),
-					*Bone.ToString(),
-					BI->bSimulatePhysics,
-					BI->GetBodyMass());
-			}
+			UE_LOG(LogTemp, Warning, TEXT("Component: %s | Class: %s"),
+				*Comp->GetName(),
+				*Comp->GetClass()->GetName());
 		}
+
+		UChaosWheeledVehicleMovementComponent* CWMC = GetWMC();
+		UE_LOG(LogTemp, Warning, TEXT("GetWMC: %p | Initialized: %d"),
+			CWMC, CWMC ? MC->HasBeenInitialized() : -1);
 		
-		VMesh->WakeAllRigidBodies();
+			VMesh->WakeAllRigidBodies();
 	}
 
 	if (USkeletalMeshComponent* VMesh = GetMesh())
