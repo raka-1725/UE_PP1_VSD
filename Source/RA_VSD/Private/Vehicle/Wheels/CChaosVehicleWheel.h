@@ -14,4 +14,8 @@ class UCChaosVehicleWheel : public UChaosVehicleWheel
 {
 	GENERATED_BODY()
 	
+public:
+	UCChaosVehicleWheel();
+	
+	
 };
