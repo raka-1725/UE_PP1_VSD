@@ -26,8 +26,8 @@ public:
 	
 	void TakeOverFromPlayer();
 	
-	UPROPERTY(EditAnywhere, Category = "AI Path")
-	ASplinePathActor* AISplinePath = nullptr;
+	//UPROPERTY(EditAnywhere, Category = "AI Path")
+	//ASplinePathActor* AISplinePath = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
 	float MaxThrottle = 0.8f;
