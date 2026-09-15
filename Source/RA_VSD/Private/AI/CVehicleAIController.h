@@ -26,11 +26,11 @@ public:
 	
 	void TakeOverFromPlayer();
 	
-	//UPROPERTY(EditAnywhere, Category = "AI Path")
-	//ASplinePathActor* AISplinePath = nullptr;
+	UPROPERTY(EditAnywhere, Category = "AI Path")
+	ASplinePathActor* AISplinePath = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
-	float MaxThrottle = 0.8f;
+	float MaxThrottle = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
 	float SteeringSensitivity = 1.0f;
@@ -38,16 +38,25 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
 	float StoppingDistance = 300.f;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
+	float ThrottleReduceSPD = 120.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
+	float MaxThrottleHighSpeed = 0.5f;
+	
+	UPROPERTY(EditAnywhere, Category = "AI Driving")
+	AActor* TargetActor = nullptr;
+	
 	// AI Path
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float LookaheadDistance = 600.f;
+	float LookaheadDist = 600.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
 	float WaypointReachRadius = 300.f;
 	
 	// Obstacle avoidance
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
-	float ObstacleTraceDistance = 800.f;
+	float ObstacleTraceDist = 800.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
 	float ObstacleTraceHalfWidth = 150.f;
@@ -56,13 +65,9 @@ public:
 	float AvoidanceSteerStrength = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
-	float BrakeOnObstacleDistance = 400.f;
+	float BrakeOnObstacleDist = 400.f;
 	
-	
-	UPROPERTY(EditAnywhere, Category = "AI Driving")
-	AActor* TargetActor = nullptr;
-	
-	
+
 	
 private:
 	IVehicleInputInterface* VehicleInput = nullptr;
@@ -73,11 +78,18 @@ private:
 	UPROPERTY()
 	ACVehiclePawn* ControlledVehicle = nullptr;
 	
-	float CurrentSplineDistance = 0.f;
+	float CurrentSplineDistance = 0.0f;
+	bool bIsActive = false;
 	
-	bool bIActive = false;
+	//Driving Func 
+	void FollowSpline(float DeltaTime);
+	float CalcSteer(const FVector& TargetLocation) const; 
+	float CalcThrottle(float CurrentSpeedKmh, float SteeringValue);
 	
-	void DriveTowardTarget(float DeltaTime) const;
+	//obstacle
+	float CheckObstacles() const;
+	
+	USplineComponent* GetSpline() const;
 	
 	void ZeroInputs() const;
 };
