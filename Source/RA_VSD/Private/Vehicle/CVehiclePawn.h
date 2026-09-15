@@ -10,6 +10,9 @@
 
 #include "Vehicle/VehicleInputInterface.h"
 
+#include "AI/CVehicleAIController.h"
+#include "AI/SplinePathActor.h"
+
 #include "CVehiclePawn.generated.h"
 
 class APlayerCharacter;
@@ -96,6 +99,13 @@ public:
 	
 	void UpdateVehicleInputs(float DeltaTime);
 	
+//AI
+	UPROPERTY(EditAnywhere, Category = "AI")
+	ASplinePathActor* AISplinePathActor = nullptr;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	bool bAITakeoverOnExit = true;
+	
 private:
 	//Only player
 	void Input_Steer(const FInputActionValue& value);
@@ -132,4 +142,6 @@ private:
 	UPROPERTY()
 	TArray<AController*> Passengers;
 	
+//AI
+	void SpawnAndPossessAI();
 };

@@ -291,9 +291,27 @@ void ACVehiclePawn::ExitVehicle(AController* Exit)
 	UE_LOG(LogTemp, Warning, TEXT("ExitVehicle: Returned control to %s"), *GetNameSafe(StoredDriver));
 	
 	StoredDriver = nullptr;
+	bCanExitVehicle = false;
+	
+	if (bAITakeoverOnExit) SpawnAndPossessAI();
 }
 
 
+void ACVehiclePawn::SpawnAndPossessAI()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	
+	ACVehicleAIController* VehicleAI = World->SpawnActor<ACVehicleAIController>(ACVehicleAIController::StaticClass(), GetActorTransform(), SpawnParams);
+
+	VehicleAI->AISplinePath = AISplinePathActor;
+	VehicleAI->Possess(this);
+	
+	UE_LOG(LogTemp, Warning, TEXT("SpawnAndPossessAI"));
+}
 //Helper
 
 void ACVehiclePawn::AddMappingContext(APlayerController* PlayerController)
@@ -329,6 +347,7 @@ void ACVehiclePawn::RemoveMappingContext(APlayerController* PlayerController)
 	if (VehicleMappingContext)
 		Sub->RemoveMappingContext(VehicleMappingContext);
 }
+
 
 
 void ACVehiclePawn::UpdateVehicleInputs(float DeltaTime)
