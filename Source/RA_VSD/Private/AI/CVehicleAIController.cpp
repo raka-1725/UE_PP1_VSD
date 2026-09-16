@@ -148,6 +148,56 @@ float ACVehicleAIController::CalcThrottle(float CurrentSpeedKmh, float SteeringV
 
 float ACVehicleAIController::CheckObstacles() const
 {
+	if (!ControlledPawn) return 0.0f;
+	UWorld* World = GetWorld();
+	if (!World) return 0.0f;
+	
+	const FVector Start = ControlledPawn->GetActorLocation();
+	const FVector Foward = ControlledPawn->GetActorForwardVector();
+	const FVector Right = ControlledPawn->GetActorRightVector();
+	
+	FCollisionQueryParams  Params;
+	Params.AddIgnoredActor(ControlledPawn);
+	
+	FCollisionShape Box = FCollisionShape::MakeBox(FVector(ObstacleTraceDist * 0.5f, ObstacleTraceHalfWidth, 60.0f));
+	
+	//Center
+	const FVector MiddleEnd = Start + Foward * ObstacleTraceDist;
+	FHitResult MiddleHit;
+	//sweep
+	const bool bMiddleHit = World->SweepSingleByChannel(
+		MiddleHit, Start, MiddleEnd, FQuat::Identity,
+		ECC_Visibility, FCollisionShape::MakeSphere(ObstacleTraceHalfWidth),
+		Params);
+	
+	if (!bMiddleHit) return 0.0f;
+	
+	//left, steer to right
+	const FVector LeftEnd = Start +(Foward - Right * 0.5f).GetSafeNormal() * ObstacleTraceDist;
+	FHitResult LeftHit;
+	const bool bLeftHit = World->SweepSingleByChannel(
+		LeftHit, Start, LeftEnd, FQuat::Identity,
+		ECC_Visibility, FCollisionShape::MakeSphere(ObstacleTraceHalfWidth),
+		Params);
+	if (!bLeftHit) return 0.0f;
+	
+	//Rihgt, steer to left
+	const FVector RightEnd = Start +(Foward + Right * 0.5f).GetSafeNormal() * ObstacleTraceDist;
+	FHitResult RightHit;
+	const bool bRightHit = World->SweepSingleByChannel(
+		RightHit, Start, RightEnd, FQuat::Identity,
+		ECC_Visibility, FCollisionShape::MakeSphere(ObstacleTraceHalfWidth),
+		Params);
+	if (!bLeftHit) return 0.0f;
+	
+	
+	//bias to clear
+	const float HitDist = MiddleHit.Distance;
+	const float Strength = 1.0f - (HitDist/ObstacleTraceDist);
+	
+	if (!bLeftHit) return -AvoidanceSteerStrength * Strength;
+	if (!bRightHit) return AvoidanceSteerStrength * Strength;
+	
 	return 0;
 }
 
