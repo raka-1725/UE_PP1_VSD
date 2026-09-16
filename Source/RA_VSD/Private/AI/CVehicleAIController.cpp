@@ -159,27 +159,47 @@ void ACVehicleAIController::FollowSpline(float DeltaTime)
 
 }
 
-float ACVehicleAIController::GetSplineCurvature(USplineComponent* Spline, float Distance) const
+float ACVehicleAIController::GetSplineCurvature(USplineComponent* SplineComp, float Distance) const
 {
-	return 0;
+	if (!SplineComp) return 0.0f;
+	const float SplineLength = SplineComp->GetSplineLength();
+	const float StepSize = 100.0f;
+	
+	const float D0 = FMath::Fmod(Distance, SplineLength);
+	const float D1 = FMath::Fmod(Distance + StepSize,SplineLength);
+	const float D2 = FMath::Fmod(Distance + StepSize * 2, SplineLength);
+
+	const FVector T0 = SplineComp->GetTangentAtDistanceAlongSpline(D0, ESplineCoordinateSpace::World).GetSafeNormal();
+	const FVector T1 = SplineComp->GetTangentAtDistanceAlongSpline(D1, ESplineCoordinateSpace::World).GetSafeNormal();
+	const FVector T2 = SplineComp->GetTangentAtDistanceAlongSpline(D2, ESplineCoordinateSpace::World).GetSafeNormal();
+	
+	const float AngleChange0 = FMath::Acos(FMath::Clamp(FVector::DotProduct(T0, T1), -1.f, 1.f));
+	const float AngleChange1 = FMath::Acos(FMath::Clamp(FVector::DotProduct(T1, T2), -1.f, 1.f));
+
+	const float AvgAngle = (AngleChange0 + AngleChange1) * 0.5f;
+	return FMath::Clamp(AvgAngle / FMath::DegreesToRadians(45.f), 0.f, 1.f);
+	
 }
 float ACVehicleAIController::CalcSteer(const FVector& TargetLocation) const
 {
-	const FVector ToTarget = (TargetLocation - ControlledPawn->GetActorLocation()).GetSafeNormal();
-	const float ForwardDot = FVector::DotProduct(ControlledPawn->GetActorForwardVector(), ToTarget);
-	const float RightDot = FVector::DotProduct(ControlledPawn->GetActorRightVector(), ToTarget);
-	float Steer = FMath::Clamp(RightDot * SteeringSensitivity, -1.0f, 1.0f);
+	const FVector PawnLoc  = ControlledPawn->GetActorLocation();
+	const FVector ToTarget = TargetLocation - PawnLoc;
 	
-	// Multiply for turn around 
-	if (ForwardDot < 0.0f)
-		Steer = FMath::Clamp(Steer * 1.5f, -1.f, 1.f);
-	return Steer;
+	const FVector Forward  = ControlledPawn->GetActorForwardVector();
+	const FVector Right    = ControlledPawn->GetActorRightVector();
+	
+	const float LateralError  = FVector::DotProduct(ToTarget, Right);
+	const float LookaheadDist2 = ToTarget.SizeSquared();
+	
+	const float Curvature = (2.f * LateralError) / LookaheadDist2;
+	return FMath::Clamp(Curvature * 200.f, -1.f, 1.f);
 }
 
 float ACVehicleAIController::CalcThrottle(float CurrentSpeedKmh, float SteeringValue, float SplineCurvature)
 {
 	const float TurnFactor = 1.0f - FMath::Abs(SteeringValue) * 0.5f;
 	const float SPDFactor = CurrentSpeedKmh > ThrottleReduceSPD ? MaxThrottleHighSpeed : MaxThrottle;
+	const float CurvatureFactor = 1.0f - SplineCurvature * 0.5f;
 	return FMath::Clamp(TurnFactor * SPDFactor, 0.0f, MaxThrottle);
 }
 
@@ -191,51 +211,51 @@ float ACVehicleAIController::CheckObstacles() const
 	if (!World) return 0.0f;
 	
 	const FVector Start = ControlledPawn->GetActorLocation();
-	const FVector Foward = ControlledPawn->GetActorForwardVector();
+	const FVector Forward = ControlledPawn->GetActorForwardVector();
 	const FVector Right = ControlledPawn->GetActorRightVector();
 	
 	FCollisionQueryParams  Params;
 	Params.AddIgnoredActor(ControlledPawn);
 	
-	FCollisionShape Box = FCollisionShape::MakeBox(FVector(ObstacleTraceDist * 0.5f, ObstacleTraceHalfWidth, 60.0f));
+	FCollisionShape TraceSphere = FCollisionShape::MakeSphere(ObstacleTraceHalfWidth);
 	
-	//Center
-	const FVector MiddleEnd = Start + Foward * ObstacleTraceDist;
+	//Centre
 	FHitResult MiddleHit;
 	//sweep
 	const bool bMiddleHit = World->SweepSingleByChannel(
-		MiddleHit, Start, MiddleEnd, FQuat::Identity,
-		ECC_Visibility, FCollisionShape::MakeSphere(ObstacleTraceHalfWidth),
+		MiddleHit, Start,Start + Forward * ObstacleTraceDist, FQuat::Identity,
+		ECC_Visibility, TraceSphere,
 		Params);
 	
 	if (!bMiddleHit) return 0.0f;
+	const float HitStrength = 1.f - (MiddleHit.Distance / ObstacleTraceDist);
 	
 	//left, steer to right
-	const FVector LeftEnd = Start +(Foward - Right * 0.5f).GetSafeNormal() * ObstacleTraceDist;
 	FHitResult LeftHit;
 	const bool bLeftHit = World->SweepSingleByChannel(
-		LeftHit, Start, LeftEnd, FQuat::Identity,
+		LeftHit, Start, Start + (Forward - Right * 0.5f).GetSafeNormal() * ObstacleTraceDist, FQuat::Identity,
 		ECC_Visibility, FCollisionShape::MakeSphere(ObstacleTraceHalfWidth),
 		Params);
-	if (!bLeftHit) return 0.0f;
 	
-	//Rihgt, steer to left
-	const FVector RightEnd = Start +(Foward + Right * 0.5f).GetSafeNormal() * ObstacleTraceDist;
+	//Right, steer to left
 	FHitResult RightHit;
 	const bool bRightHit = World->SweepSingleByChannel(
-		RightHit, Start, RightEnd, FQuat::Identity,
+		RightHit, Start, Start + (Forward + Right * 0.5f).GetSafeNormal() * ObstacleTraceDist, FQuat::Identity,
 		ECC_Visibility, FCollisionShape::MakeSphere(ObstacleTraceHalfWidth),
 		Params);
-	if (!bLeftHit) return 0.0f;
+	//avoid to right
+	if (bLeftHit && !bRightHit) return AvoidanceSteerStrength * HitStrength;
 	
+	//avoid to left
+	if (!bLeftHit && bRightHit) return -AvoidanceSteerStrength * HitStrength;
 	
-	//bias to clear
-	const float HitDist = MiddleHit.Distance;
-	const float Strength = 1.0f - (HitDist/ObstacleTraceDist);
-	
-	if (!bLeftHit) return -AvoidanceSteerStrength * Strength;
-	if (!bRightHit) return AvoidanceSteerStrength * Strength;
-	
+	if (!bLeftHit && bRightHit)
+	{
+		const float LeftDist = LeftHit.bBlockingHit ? LeftHit.Distance : ObstacleTraceDist;
+		const float RightDist = RightHit.bBlockingHit ? RightHit.Distance : ObstacleTraceDist;
+		
+		return RightDist > LeftDist ? AvoidanceSteerStrength * HitStrength : -AvoidanceSteerStrength * HitStrength;
+	}
 	return 0;
 }
 

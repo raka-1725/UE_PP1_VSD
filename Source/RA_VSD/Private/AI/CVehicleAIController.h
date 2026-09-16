@@ -101,7 +101,7 @@ private:
 	void FollowSpline(float DeltaTime);
 	float CalcSteer(const FVector& TargetLocation) const; 
 	float CalcThrottle(float CurrentSpeedKmh, float SteeringValue, float SplineCurvature);
-	float GetSplineCurvature(USplineComponent* Spline, float Distance) const;
+	float GetSplineCurvature(USplineComponent* SplineComp, float Distance) const;
 	
 	//obstacle
 	float CheckObstacles() const;
