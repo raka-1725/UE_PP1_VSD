@@ -106,6 +106,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	bool bAITakeoverOnExit = true;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	bool bAIDrive = false;
+	
 private:
 	//Only player
 	void Input_Steer(const FInputActionValue& value);

@@ -76,6 +76,8 @@ void ACVehiclePawn::BeginPlay()
 	{
 		VMesh->WakeAllRigidBodies();
 	}
+	
+	if (bAIDrive) SpawnAndPossessAI();
 }
 
 

@@ -52,7 +52,22 @@ public:
 	float LookaheadDist = 600.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
+	float LookaheadSpeedScale = 0.05f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
+	float LookaheadMin = 400.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
+	float LookaheadMax = 2000.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
 	float WaypointReachRadius = 300.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Driving")
+	float CornerBrakeThreshold = 0.3f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Driving")
+	float CornerBrakeStrength = 0.4f;
 	
 	// Obstacle avoidance
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
@@ -80,11 +95,13 @@ private:
 	
 	float CurrentSplineDistance = 0.0f;
 	bool bIsActive = false;
-	
+	//steer val
+	float steerValue = 0.0f;
 	//Driving Func 
 	void FollowSpline(float DeltaTime);
 	float CalcSteer(const FVector& TargetLocation) const; 
-	float CalcThrottle(float CurrentSpeedKmh, float SteeringValue);
+	float CalcThrottle(float CurrentSpeedKmh, float SteeringValue, float SplineCurvature);
+	float GetSplineCurvature(USplineComponent* Spline, float Distance) const;
 	
 	//obstacle
 	float CheckObstacles() const;
