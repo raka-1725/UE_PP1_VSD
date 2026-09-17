@@ -70,6 +70,9 @@ public:
 	class UInputAction* BrakeInputAction;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* HandBrakeInputAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* VehicleInteractAction;
 	
 	//priority higher than player
@@ -114,11 +117,13 @@ private:
 	void Input_Steer(const FInputActionValue& value);
 	void Input_Throttle(const FInputActionValue& Val);
 	void Input_Brake(const FInputActionValue& Val);
+	void Input_HandBrake();
 	void Input_InteractVehicle();
 	
 	void Input_ThrottleReleased(const FInputActionValue& Val);
 	void Input_BrakeReleased(const FInputActionValue& Val);
 	void Input_SteerReleased(const FInputActionValue& Val);
+	void Input_HandBrakeReleased(const FInputActionValue& Val);
 	
 	void AddMappingContext(APlayerController* PlayerController);
 	void RemoveMappingContext(APlayerController* PlayerController);

@@ -159,6 +159,12 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 		{
 			EnhancedInputComponent->BindAction(VehicleInteractAction, ETriggerEvent::Started, this, &ACVehiclePawn::Input_InteractVehicle);
 		}
+		
+		if (HandBrakeInputAction)
+		{
+			EnhancedInputComponent->BindAction(HandBrakeInputAction, ETriggerEvent::Started, this, &ACVehiclePawn::Input_HandBrake);
+			EnhancedInputComponent->BindAction(HandBrakeInputAction, ETriggerEvent::Canceled, this, &ACVehiclePawn::Input_HandBrakeReleased);
+		}
 	}
 }
 
@@ -385,6 +391,11 @@ void ACVehiclePawn::Input_Brake(const FInputActionValue& value)
 	BrakeTarget = (value.Get<float>());
 }
 
+void ACVehiclePawn::Input_HandBrake()
+{
+	MovementComponent->SetHandbrakeInput(true);
+}
+
 void ACVehiclePawn::Input_InteractVehicle()
 {
 	if (!bCanExitVehicle || bIgnoreInteractInput) {UE_LOG(LogTemp, Warning, TEXT("Exit vehicle return")); return;}
@@ -405,6 +416,12 @@ void ACVehiclePawn::Input_BrakeReleased(const FInputActionValue& Val)
 void ACVehiclePawn::Input_SteerReleased(const FInputActionValue& Val)
 {
 	SteerTarget = 0.0f;
+}
+
+void ACVehiclePawn::Input_HandBrakeReleased(const FInputActionValue& Val)
+{
+	MovementComponent->SetHandbrakeInput(false);
+
 }
 
 

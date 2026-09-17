@@ -10,6 +10,8 @@ UCChaosVehicleWheelRear::UCChaosVehicleWheelRear()
 
 	bAffectedByEngine = true;
 
+	bAffectedByHandbrake = true;
+	
 	MaxSteerAngle = 0.0f; //0 for rear
 	FrictionForceMultiplier = 3.0f;
 	SuspensionMaxRaise = 10.0f;
