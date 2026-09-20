@@ -306,12 +306,11 @@ float ACVehicleAIController::CheckObstacles() const
 	//avoid to left
 	if (!bLeftHit && bRightHit) return -AvoidanceSteerStrength * HitStrength;
 	
-	if (!bLeftHit && bRightHit)
+	if (!bLeftHit && !bRightHit)
 	{
-		const float LeftDist = LeftHit.bBlockingHit ? LeftHit.Distance : ObstacleTraceDist;
+		const float LeftDist  = LeftHit.bBlockingHit  ? LeftHit.Distance  : ObstacleTraceDist;
 		const float RightDist = RightHit.bBlockingHit ? RightHit.Distance : ObstacleTraceDist;
-		
-		return RightDist > LeftDist ? AvoidanceSteerStrength * HitStrength : -AvoidanceSteerStrength * HitStrength;
+		return RightDist > LeftDist ?  AvoidanceSteerStrength * HitStrength : -AvoidanceSteerStrength * HitStrength;
 	}
 	return 0;
 }
