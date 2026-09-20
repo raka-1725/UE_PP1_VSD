@@ -3,7 +3,6 @@
 
 #include "AI/CVehicleAIController.h"
 
-#include "AssetTypeCategories.h"
 #include "AI/SplinePathActor.h"
 #include "Vehicle/CVehiclePawn.h"
 #include "Components/SplineComponent.h"
@@ -86,65 +85,114 @@ void ACVehicleAIController::FollowSpline(float DeltaTime)
 	const float SplineLength = SplineComp->GetSplineLength();
 	
 	const FVector VehicleVelocity = ControlledPawn->GetVelocity();
+	const FVector PawnLocation = ControlledPawn->GetActorLocation();
 	const float SpdCmS = VehicleVelocity.Size();
 	const float SpdKmh = SpdCmS * 0.036f;
 	
-	//modular - clamp/wrap for looping spline
-	CurrentSplineDistance = FMath::Fmod(CurrentSplineDistance + SpdCmS * DeltaTime,SplineLength);
+	
+	//Projecting Tangent
+	const FVector SplineTangent = SplineComp->GetTangentAtDistanceAlongSpline(CurrentSplineDistance, ESplineCoordinateSpace::World).GetSafeNormal();
+	
+	const float TangentSpeed = FVector::DotProduct(VehicleVelocity, SplineTangent);
+	
+	const float MinAdvanceSpeed = 50.f;
+	const float AdvanceSpeed = FMath::Max(TangentSpeed, MinAdvanceSpeed);
+	
+	CurrentSplineDistance = FMath::Fmod(CurrentSplineDistance + AdvanceSpeed * DeltaTime, SplineLength);
+	
+	//Getting Closest point - Prevent from going off too far
+	const FVector CurrentSplinePoint = SplineComp->GetLocationAtDistanceAlongSpline(CurrentSplineDistance, ESplineCoordinateSpace::World);
+	const float DistFromSpline = FVector::Dist(PawnLocation, CurrentSplinePoint);
+	
+	if (DistFromSpline > ResyncThreshold)
+	{
+		float BestDist   = CurrentSplineDistance;
+		float BestSqDist = FVector::DistSquared(PawnLocation, CurrentSplinePoint);
+
+		for (float Offset = 0.f; Offset < ResyncSearchWindow; Offset += 100.f)
+		{
+			const float TestDist = FMath::Fmod(
+				CurrentSplineDistance + Offset, SplineLength);
+			const FVector TestPt = SplineComp->GetLocationAtDistanceAlongSpline(
+				TestDist, ESplineCoordinateSpace::World);
+			const float SqD = FVector::DistSquared(PawnLocation, TestPt);
+
+			if (SqD < BestSqDist)
+			{
+				BestSqDist = SqD;
+				BestDist   = TestDist;
+			}
+		}
+
+		//UE_LOG(LogTemp, Warning, TEXT("Resyncing spline | Drift: %.0f"), DistFromSpline);
+		CurrentSplineDistance = BestDist;
+	}
 	
 	//LookAhead
 	const float Lookahead = FMath::Clamp(LookaheadDist + SpdCmS * LookaheadSpeedScale, LookaheadMin, LookaheadMax);
 	const float LookaheadPos = FMath::Fmod(CurrentSplineDistance + Lookahead, SplineLength);
+	FVector ValidTarget = SplineComp->GetLocationAtDistanceAlongSpline(LookaheadPos, ESplineCoordinateSpace::World);
 	
-	const FVector TargetLocation = SplineComp->GetLocationAtDistanceAlongSpline(LookaheadPos, ESplineCoordinateSpace::World);
+	//Check target is in front of pawn
+	const FVector ToTarget = (ValidTarget - PawnLocation).GetSafeNormal();
+	const float ForwardDot = FVector::DotProduct(ControlledPawn->GetActorForwardVector(), ToTarget);
+	if (ForwardDot < 0.0f)
+	{
+		bool bFoundForward = false;
+		for (float ExtraLookahead = Lookahead + 300.0f ; ExtraLookahead < SplineLength * 0.5f; ExtraLookahead += 200.0f)
+		{
+			const float TestPos = FMath::Fmod(CurrentSplineDistance + ExtraLookahead, SplineLength);
+			const FVector TestTarget = SplineComp->GetLocationAtDistanceAlongSpline(TestPos, ESplineCoordinateSpace::World);
+			const FVector TestDir = (TestTarget - PawnLocation).GetSafeNormal();
+			
+			if (FVector::DotProduct(ControlledPawn->GetActorForwardVector(), TestDir) > 0.1f)
+			{
+				ValidTarget = TestTarget;
+				bFoundForward = true;
+				break;
+			}
+		}
+		if (!bFoundForward)
+		{
+			ValidTarget = PawnLocation + SplineTangent * Lookahead;
+		}
+	}
 	
 	//curvature
 	const float Curvature = GetSplineCurvature(SplineComp, CurrentSplineDistance);
-	
+	const float AheadCurvature = GetSplineCurvature(SplineComp, FMath::Fmod(CurrentSplineDistance + Lookahead * 0.5f, SplineLength));
 	
 	//Obstacle check
 	const float ObstacleBias = CheckObstacles();
 	const bool bObstacleAhead = FMath::Abs(ObstacleBias) > 0.1f;
 	
 	//Steer
-	float RawSteerVal = CalcSteer(TargetLocation);
+	float RawSteerVal = CalcSteer(ValidTarget);
 	RawSteerVal = FMath::Clamp(RawSteerVal + ObstacleBias, -1.0f, 1.0f);
+	
+	smoothsteerValue = FMath::FInterpTo(smoothsteerValue, RawSteerVal, DeltaTime, 3.0f);
+	
 	const float SteerSpeed = bObstacleAhead ? 8.f : 4.f;
-	steerValue = FMath::FInterpTo(steerValue, RawSteerVal, DeltaTime, SteerSpeed);
+	steerValue = FMath::FInterpTo(steerValue, smoothsteerValue, DeltaTime, SteerSpeed);
 	
 	
 	//Throttle
 	float Throttle = CalcThrottle(SpdKmh, RawSteerVal, Curvature);
-	if (bObstacleAhead)
-	{
-		const float DistToObst = ObstacleTraceDist *(1.0f - FMath::Abs(ObstacleBias));
-		if (DistToObst < BrakeOnObstacleDist){ Throttle = 0.0f;}
-	}
-	
-	//Brake
-	//check dist to obstacle, if too close, brake
-	 float Brake = 0.0f;
-	//curvature
-	const float AheadCurvature = GetSplineCurvature(SplineComp, FMath::Fmod(CurrentSplineDistance + Lookahead * 0.5f, SplineLength));
-	
+	float Brake = 0.0f;
 	if (AheadCurvature > CornerBrakeThreshold)
 	{
 		Brake = CornerBrakeStrength * (AheadCurvature - CornerBrakeThreshold);
-		Throttle *= (1.0f - Brake * 0.5f);
+		Throttle = 0.0f;
 	}
-	
 	if (bObstacleAhead)
 	{
-		const float DistToObst = ObstacleTraceDist * (1.0f - FMath::Abs(ObstacleBias));
-		if (DistToObst < BrakeOnObstacleDist)
-		{
-			Throttle = FMath::Min(Throttle, 0.3f);
-		}
-		if (DistToObst < BrakeOnObstacleDist * 0.5f)
-		{
-			Brake = FMath::Max(Brake, 0.6f);
-			Throttle = 0.0f;
-		}
+		const float DistToObst = ObstacleTraceDist *(1.0f - FMath::Abs(ObstacleBias));
+		if (DistToObst < BrakeOnObstacleDist){ Throttle = 0.0f; Brake = 1.0f; }
+	}
+	//Speed clamp
+	if (SpdKmh > MaxSPD)
+	{
+		Throttle = 0.0f;
 	}
 	
 	//Vehicle Input
@@ -153,10 +201,19 @@ void ACVehicleAIController::FollowSpline(float DeltaTime)
 	VehicleInput->ApplyThrottle(Throttle);
 	
 	//Debug draw
-	DrawDebugSphere(GetWorld(), TargetLocation, 30.f, 8, FColor::Green, false, -1.f);
-	DrawDebugLine(GetWorld(), ControlledPawn->GetActorLocation(), TargetLocation, FColor::Magenta, false, -1.0f);
+	const FVector ClosestPoint = SplineComp->GetLocationAtDistanceAlongSpline(CurrentSplineDistance, ESplineCoordinateSpace::World);
 	
+	DrawDebugSphere(GetWorld(), CurrentSplinePoint, 20.f, 8, FColor::Blue,  false, -1.f);
+	DrawDebugSphere(GetWorld(), ValidTarget,        40.f, 8, FColor::Green, false, -1.f);
+	DrawDebugLine(GetWorld(), PawnLocation, ValidTarget, FColor::Magenta, false, -1.f);
+	DrawDebugLine(GetWorld(), PawnLocation,
+		PawnLocation + SplineTangent * 300.f, FColor::Cyan, false, -1.f);
 
+	DrawDebugString(GetWorld(),
+		PawnLocation + FVector(0, 0, 200),
+		FString::Printf(TEXT("%.0fkm/h Curv:%.2f Str:%.2f Thr:%.2f Dot:%.2f Drift:%.0f"),
+			SpdKmh, AheadCurvature, steerValue, Throttle, ForwardDot, DistFromSpline),
+		nullptr, FColor::White, -1.f);
 }
 
 float ACVehicleAIController::GetSplineCurvature(USplineComponent* SplineComp, float Distance) const
@@ -185,21 +242,21 @@ float ACVehicleAIController::CalcSteer(const FVector& TargetLocation) const
 	const FVector PawnLoc  = ControlledPawn->GetActorLocation();
 	const FVector ToTarget = TargetLocation - PawnLoc;
 	
-	const FVector Forward  = ControlledPawn->GetActorForwardVector();
-	const FVector Right    = ControlledPawn->GetActorRightVector();
+	const float Lookahead = ToTarget.Size();
 	
-	const float LateralError  = FVector::DotProduct(ToTarget, Right);
-	const float LookaheadDist2 = ToTarget.SizeSquared();
+	const float LateralError  = FVector::DotProduct(ControlledPawn->GetActorRightVector(),ToTarget / Lookahead);
 	
-	const float Curvature = (2.f * LateralError) / LookaheadDist2;
-	return FMath::Clamp(Curvature * 200.f, -1.f, 1.f);
+	const float NormalizedLookahead = Lookahead / 1000.f;
+	const float Curvature = (2.0f * LateralError) / FMath::Max(NormalizedLookahead, 0.1f);
+	
+	return FMath::Clamp(Curvature * 0.7f, -1.0f, 1.0f);
 }
 
 float ACVehicleAIController::CalcThrottle(float CurrentSpeedKmh, float SteeringValue, float SplineCurvature)
 {
 	const float TurnFactor = 1.0f - FMath::Abs(SteeringValue) * 0.5f;
 	const float SPDFactor = CurrentSpeedKmh > ThrottleReduceSPD ? MaxThrottleHighSpeed : MaxThrottle;
-	const float CurvatureFactor = 1.0f - SplineCurvature * 0.5f;
+	const float CurvatureFactor = 1.0f - SplineCurvature * 0.6f;
 	return FMath::Clamp(TurnFactor * SPDFactor, 0.0f, MaxThrottle);
 }
 

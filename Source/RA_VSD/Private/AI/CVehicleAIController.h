@@ -45,17 +45,17 @@ public:
 	float MaxThrottleHighSpeed = 0.5f;
 	
 	UPROPERTY(EditAnywhere, Category = "AI Driving")
-	AActor* TargetActor = nullptr;
+	float MaxSPD = 100.0f;
 	
 	// AI Path
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float LookaheadDist = 600.f;
+	float LookaheadDist = 1000.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
 	float LookaheadSpeedScale = 0.05f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float LookaheadMin = 400.f;
+	float LookaheadMin = 800.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
 	float LookaheadMax = 2000.f;
@@ -68,6 +68,12 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Driving")
 	float CornerBrakeStrength = 0.4f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
+	float ResyncThreshold = 500.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
+	float ResyncSearchWindow = 3000.f;
 	
 	// Obstacle avoidance
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
@@ -97,6 +103,7 @@ private:
 	bool bIsActive = false;
 	//steer val
 	float steerValue = 0.0f;
+	float smoothsteerValue = 0.0f;
 	//Driving Func 
 	void FollowSpline(float DeltaTime);
 	float CalcSteer(const FVector& TargetLocation) const; 
