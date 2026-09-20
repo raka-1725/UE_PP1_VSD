@@ -106,10 +106,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	ASplinePathActor* AISplinePathActor = nullptr;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	UPROPERTY(EditAnywhere, Category = "AI")
 	bool bAITakeoverOnExit = true;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	UPROPERTY(EditAnywhere, Category = "AI")
 	bool bAIDrive = false;
 	
 private:
