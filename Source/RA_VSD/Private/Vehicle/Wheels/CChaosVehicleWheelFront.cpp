@@ -9,10 +9,11 @@ UCChaosVehicleWheelFront::UCChaosVehicleWheelFront()
 	WheelWidth = 20.0f;
 
 	bAffectedByEngine = true;
+	bAffectedByBrake = true;
 	bAffectedBySteering = true;
 
 	MaxSteerAngle = 50.0f; //0 for rear
-	FrictionForceMultiplier = 3.0f;
+	FrictionForceMultiplier = 10.0f;
 	SuspensionMaxRaise = 10.0f;
 	SuspensionMaxDrop = 15.0f;
 	SuspensionDampingRatio = 0.5f;
