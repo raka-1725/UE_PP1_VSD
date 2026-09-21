@@ -160,7 +160,7 @@ void ACVehicleAIController::FollowSpline(float DeltaTime)
 	
 	//curvature
 	const float Curvature = GetSplineCurvature(SplineComp, CurrentSplineDistance);
-	const float AheadCurvature = GetSplineCurvature(SplineComp, FMath::Fmod(CurrentSplineDistance + Lookahead * 0.5f, SplineLength));
+	const float AheadCurvature = GetSplineCurvature(SplineComp, FMath::Fmod(CurrentSplineDistance + Lookahead * 1.0f, SplineLength));
 	
 	//Obstacle check
 	const float ObstacleBias = CheckObstacles();
@@ -179,10 +179,13 @@ void ACVehicleAIController::FollowSpline(float DeltaTime)
 	//Throttle
 	float Throttle = CalcThrottle(SpdKmh, RawSteerVal, Curvature);
 	float Brake = 0.0f;
+	//UE_LOG(LogTemp,Warning, TEXT("Ahead curvature: %f"), AheadCurvature);
 	if (AheadCurvature > CornerBrakeThreshold)
 	{
-		Brake = CornerBrakeStrength * (AheadCurvature - CornerBrakeThreshold);
+		Brake = CornerBrakeStrength * (AheadCurvature - CornerBrakeThreshold) * 100.0f;
 		Throttle = 0.0f;
+		
+		UE_LOG(LogTemp,Warning, TEXT("Ahead curvature brake: %f"), Brake);
 	}
 	if (bObstacleAhead)
 	{
@@ -208,12 +211,6 @@ void ACVehicleAIController::FollowSpline(float DeltaTime)
 	DrawDebugLine(GetWorld(), PawnLocation, ValidTarget, FColor::Magenta, false, -1.f);
 	DrawDebugLine(GetWorld(), PawnLocation,
 		PawnLocation + SplineTangent * 300.f, FColor::Cyan, false, -1.f);
-
-	DrawDebugString(GetWorld(),
-		PawnLocation + FVector(0, 0, 200),
-		FString::Printf(TEXT("%.0fkm/h Curv:%.2f Str:%.2f Thr:%.2f Dot:%.2f Drift:%.0f"),
-			SpdKmh, AheadCurvature, steerValue, Throttle, ForwardDot, DistFromSpline),
-		nullptr, FColor::White, -1.f);
 }
 
 float ACVehicleAIController::GetSplineCurvature(USplineComponent* SplineComp, float Distance) const
