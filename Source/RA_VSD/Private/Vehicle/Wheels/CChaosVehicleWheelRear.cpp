@@ -16,5 +16,5 @@ UCChaosVehicleWheelRear::UCChaosVehicleWheelRear()
 	FrictionForceMultiplier = 10.0f;
 	SuspensionMaxRaise = 10.0f;
 	SuspensionMaxDrop = 15.0f;
-	SuspensionDampingRatio = 0.5f;
+	SuspensionDampingRatio = 1.0f;
 }
