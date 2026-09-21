@@ -163,7 +163,7 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 		if (HandBrakeInputAction)
 		{
 			EnhancedInputComponent->BindAction(HandBrakeInputAction, ETriggerEvent::Started, this, &ACVehiclePawn::Input_HandBrake);
-			EnhancedInputComponent->BindAction(HandBrakeInputAction, ETriggerEvent::Canceled, this, &ACVehiclePawn::Input_HandBrakeReleased);
+			EnhancedInputComponent->BindAction(HandBrakeInputAction, ETriggerEvent::Completed, this, &ACVehiclePawn::Input_HandBrakeReleased);
 		}
 	}
 }
@@ -394,6 +394,7 @@ void ACVehiclePawn::Input_Brake(const FInputActionValue& value)
 void ACVehiclePawn::Input_HandBrake()
 {
 	MovementComponent->SetHandbrakeInput(true);
+	UE_LOG(LogTemp, Warning, TEXT("Hand Brake | %s"), MovementComponent->GetHandbrakeInput() ? TEXT("true") : TEXT("false"));
 }
 
 void ACVehiclePawn::Input_InteractVehicle()
@@ -421,6 +422,7 @@ void ACVehiclePawn::Input_SteerReleased(const FInputActionValue& Val)
 void ACVehiclePawn::Input_HandBrakeReleased(const FInputActionValue& Val)
 {
 	MovementComponent->SetHandbrakeInput(false);
+	UE_LOG(LogTemp, Warning, TEXT("Hand Brake | %s"), MovementComponent->GetHandbrakeInput() ? TEXT("true") : TEXT("false"));
 
 }
 
