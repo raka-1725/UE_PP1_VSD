@@ -30,7 +30,7 @@ public:
 	ASplinePathActor* AISplinePath = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
-	float MaxThrottle = 1.0f;
+	float MaxThrottle = 0.85f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
 	float SteeringSensitivity = 1.0f;
@@ -39,26 +39,26 @@ public:
 	float StoppingDistance = 300.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
-	float ThrottleReduceSPD = 120.0f;
+	float ThrottleReduceSPD = 60.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI Driving")
 	float MaxThrottleHighSpeed = 0.5f;
 	
 	UPROPERTY(EditAnywhere, Category = "AI Driving")
-	float MaxSPD = 100.0f;
+	float MaxSPD = 90.0f;
 	
 	// AI Path
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float LookaheadDist = 1000.f;
+	float LookaheadDist = 300.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float LookaheadSpeedScale = 0.05f;
+	float LookaheadSpeedScale = 0.35f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float LookaheadMin = 800.f;
+	float LookaheadMin = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float LookaheadMax = 2000.f;
+	float LookaheadMax = 800.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
 	float WaypointReachRadius = 300.f;
@@ -69,24 +69,27 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Driving")
 	float CornerBrakeStrength = 0.4f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float ResyncThreshold = 500.f;
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Driving")
+	float CrossTrackCorrectionGain = 2.5f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
-	float ResyncSearchWindow = 3000.f;
+	float ResyncThreshold = 200.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Path")
+	float ResyncSearchWindow = 800.f;
 	
 	// Obstacle avoidance
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
 	float ObstacleTraceDist = 800.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
-	float ObstacleTraceHalfWidth = 150.f;
+	float ObstacleTraceHalfWidth = 60.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
-	float AvoidanceSteerStrength = 1.0f;
+	float AvoidanceSteerStrength = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Avoidance")
-	float BrakeOnObstacleDist = 400.f;
+	float BrakeOnObstacleDist = 250.0f;
 	
 
 	

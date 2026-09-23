@@ -240,13 +240,24 @@ float ACVehicleAIController::CalcSteer(const FVector& TargetLocation) const
 	const FVector ToTarget = TargetLocation - PawnLoc;
 	
 	const float Lookahead = ToTarget.Size();
-	
 	const float LateralError  = FVector::DotProduct(ControlledPawn->GetActorRightVector(),ToTarget / Lookahead);
 	
 	const float NormalizedLookahead = Lookahead / 1000.f;
 	const float Curvature = (2.0f * LateralError) / FMath::Max(NormalizedLookahead, 0.1f);
 	
-	return FMath::Clamp(Curvature * 0.7f, -1.0f, 1.0f);
+	//cross track
+	USplineComponent* SplineComp = GetSpline();
+	const FVector ClosestPoint = SplineComp->GetLocationAtDistanceAlongSpline(CurrentSplineDistance, ESplineCoordinateSpace::World);
+	const FVector CrossTrackVec = PawnLoc - ClosestPoint;
+	const float CrossTrackError = FVector::DotProduct(ControlledPawn->GetActorRightVector(),CrossTrackVec);
+	
+	const float Spd = FMath::Max(ControlledPawn->GetVelocity().Size(), 1.0f);
+	//getting radian degree to the nearest point. Atan2 for 360
+	const float CrossTrackTerm = FMath::Atan2(CrossTrackCorrectionGain * -CrossTrackError, Spd);
+	
+	const float Combined = (Curvature * 0.7f) + (CrossTrackTerm * 1.4f);
+
+	return FMath::Clamp(Combined, -1.0f, 1.0f);
 }
 
 float ACVehicleAIController::CalcThrottle(float CurrentSpeedKmh, float SteeringValue, float SplineCurvature)
