@@ -18,6 +18,13 @@ public:
 	virtual void NativeConstruct() override;
 	
 private:
-
+	UPROPERTY(meta=(BindWidget))
+	class USpeedGuage* SpeedGuage;
+	
+	UPROPERTY(meta=(BindWidget))
+	class UVehicleWidget* VehicleWidget;
+	
+	UPROPERTY()
+	const class UChaosVehicleMovementComponent* VehicleMovementComponent;
 	
 };

@@ -14,4 +14,14 @@ class USpeedGuage : public UUserWidget
 {
 	GENERATED_BODY()
 	
+	
+public:
+	virtual void NativeConstruct() override;
+	void SetValue(float NewValue);
+	
+private:
+	UPROPERTY(meta =(BindWidget))
+	class UTextBlock* ValueText;
+	
+	
 };
