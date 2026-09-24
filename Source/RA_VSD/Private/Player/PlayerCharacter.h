@@ -45,16 +45,19 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Vehicle")
 	float InteractRadius = 300.0f;
 	
+	UPROPERTY()
+	ACVehiclePawn* CurrentVehicle = nullptr;
+
 private:
 	void Input_Move(const struct FInputActionValue& value);
 	void Input_Look(const struct FInputActionValue& value);
 	
-	UPROPERTY()
-	ACVehiclePawn* CurrentVehicle = nullptr;
 	
 	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
 	class USpringArmComponent* CameraBoom;
 	
 	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
 	class UCameraComponent* ViewCam;
+	
+	
 };

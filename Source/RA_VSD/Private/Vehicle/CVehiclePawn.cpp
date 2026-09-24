@@ -267,8 +267,14 @@ void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 	
 	PlayerController->SetViewTargetWithBlend(this,0.5f,EViewTargetBlendFunction::VTBlend_Cubic,0.f,true);;
 	
+	
+	
 	bCanExitVehicle = true;
 	bIgnoreInteractInput = true;
+	
+	
+	
+	
 	
 	UE_LOG(LogTemp, Warning, TEXT("EnterVehicle: Possessed by %s"), *GetNameSafe(NewDriver));
 }
