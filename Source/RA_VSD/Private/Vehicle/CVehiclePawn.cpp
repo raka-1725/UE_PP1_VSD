@@ -335,10 +335,13 @@ void ACVehiclePawn::SetUI()
 
 void ACVehiclePawn::UpdateUI()
 {
+	UE_LOG(LogTemp, Warning, TEXT("UpdateUI"));
 	if (!VehicleWidget) return;
 	USpeedGuage* SPDGuage = VehicleWidget->GetSpeedWidgdet();
+	UE_LOG(LogTemp, Warning, TEXT("SPDGuage"));
 	if (!SPDGuage) return;
 	int SPD = MovementComponent->GetForwardSpeedMPH();
+	UE_LOG(LogTemp, Warning, TEXT("SPD: %d"), SPD);
 	SPDGuage->SetValue(SPD);
 }
 
