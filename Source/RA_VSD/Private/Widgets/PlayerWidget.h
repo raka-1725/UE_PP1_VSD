@@ -15,9 +15,11 @@ class UPlayerWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
-	
+	void BeginPlay();
+
 	void ShowCanInteract();
 	void HideCanInteract();
 private:
-	
+	UPROPERTY(meta=(BindWidget))
+	class UOverlay* InteractOverlay;
 };

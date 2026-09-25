@@ -3,6 +3,7 @@
 
 #include "Player/PlayerCharacter.h"
 
+#include "CPlayerController.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Vehicle/VehicleInputInterface.h"
@@ -15,6 +16,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Widgets/PlayerWidget.h"
 
 
 APlayerCharacter::APlayerCharacter()
@@ -54,7 +56,8 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
+	if (CurrentVehicle == nullptr) CheckNearbyVehicle();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -75,6 +78,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 }
 
 
+
 void APlayerCharacter::Input_Move(const struct FInputActionValue& value)
 {
 	if (!Controller) return;
@@ -92,12 +96,14 @@ void APlayerCharacter::Input_Look(const struct FInputActionValue& value)
 	AddControllerPitchInput(Axis.Y);
 }
 
-void APlayerCharacter::TryEnterVehicle()
+void APlayerCharacter::CheckNearbyVehicle()
 {
+	if (CurrentVehicle) return;
+	
+	NearbyVehiclePawn = nullptr;
+	
 	UWorld* World = GetWorld();
 	if (!World) return;
-	
-	UE_LOG(LogTemp, Warning, TEXT("Enter vehicle"));
 	
 	TArray<FOverlapResult> Overlaps;
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractRadius);
@@ -119,34 +125,64 @@ void APlayerCharacter::TryEnterVehicle()
 		
 		if (!Vehicle->CanEnterVehicle(this)) continue;
 		
-		AController* MyController = GetController();
-		if (!MyController) return;
 		UE_LOG(LogTemp, Warning, TEXT("Vehicle Found"));
-		
-		CurrentVehicle = Vehicle;
-		
-		SetActorHiddenInGame(true);
-		SetActorEnableCollision(false);
-		
-		GetCharacterMovement()->DisableMovement();
-		
-		Vehicle->EnterVehicle(MyController);
-		return;
+		NearbyVehiclePawn = Vehicle;
+		break;
+	}	
+	
+	if (NearbyVehiclePawn)
+	{
+		UPlayerWidget* PW = Cast<ACPlayerController>(GetController())->PlayerWidget;
+		PW->ShowCanInteract();
+	}
+	else
+	{
+		UPlayerWidget* PW = Cast<ACPlayerController>(GetController())->PlayerWidget;
+		PW->HideCanInteract();
 	}
 	
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), InteractRadius, 16, FColor::Emerald);
+	
+}
+void APlayerCharacter::TryEnterVehicle()
+{
+	if (!NearbyVehiclePawn) return;
+
+	AController* MyController = GetController();
+	if (!MyController) return;
+	
+	CurrentVehicle = NearbyVehiclePawn;
+	NearbyVehiclePawn = nullptr;
+
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+	GetCharacterMovement()->DisableMovement();
+    
+	UPlayerWidget* PW = Cast<ACPlayerController>(GetController())->PlayerWidget;
+	PW->HideCanInteract();
+	
+	CurrentVehicle->EnterVehicle(MyController);
 	
 }
 
 void APlayerCharacter::OnExitVehicle(FTransform ExitVehicleTransform)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Exiting Vehicle"));
+	if (ACPlayerController* PC = Cast<ACPlayerController>(GetController()))
+	{
+		PC->Possess(this);
+	}
+
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
-	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
 	SetActorTransform(ExitVehicleTransform, false, nullptr, ETeleportType::TeleportPhysics);
-
+	
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	NearbyVehiclePawn = nullptr;
 	CurrentVehicle = nullptr;
+	
+	
+	CheckNearbyVehicle();
 }
 
 void APlayerCharacter::EnableCharacterInput(APlayerController* PlayerController)

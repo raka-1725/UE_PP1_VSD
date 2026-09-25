@@ -16,6 +16,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Widgets/VehicleWidget.h"
 
 ACVehiclePawn::ACVehiclePawn()
 {
@@ -87,6 +88,7 @@ void ACVehiclePawn::Tick(float DeltaTime)
 	
 	if (bCanExitVehicle) bIgnoreInteractInput = false;
 	if (bIsPlayerDriving) UpdateVehicleInputs(DeltaTime);
+	if (bIsPlayerDriving) UpdateUI();
 }
 
 UChaosWheeledVehicleMovementComponent* ACVehiclePawn::GetWMC() const
@@ -105,6 +107,7 @@ void ACVehiclePawn::PossessedBy(AController* NewController)
 	{
 		OnPlayerControl();
 		AddMappingContext(PlayerController);
+		SetUI();
 	}
 	else if (AAIController* AIController = Cast<AAIController>(NewController))
 	{
@@ -241,7 +244,7 @@ bool ACVehiclePawn::IsPlayerDriving() const
 bool ACVehiclePawn::CanEnterVehicle(APlayerCharacter* PlayerCharacter) const
 {
 	if (bIsPlayerDriving || StoredDriver != nullptr) return false;
-	UE_LOG(LogTemp, Warning, TEXT("Can enter vehicle %d"), bIsPlayerDriving);
+	//UE_LOG(LogTemp, Warning, TEXT("Can enter vehicle %d"), bIsPlayerDriving);
 	return true;
 }
 
@@ -293,14 +296,11 @@ void ACVehiclePawn::ExitVehicle(AController* Exit)
 		FRotator(0.0f, GetActorRotation().Yaw, 0.0f).Quaternion(),
 		GetActorLocation() + WorldOffset);
 	
-	StoredDriver->SetActorHiddenInGame(false);
-	StoredDriver->SetActorEnableCollision(true);
-	StoredDriver->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-	StoredDriver->SetActorTransform(ExitTransform, false, nullptr, ETeleportType::TeleportPhysics);
+	APlayerCharacter* Driver = StoredDriver;
+	Exit->Possess(Driver);
 	
-	Exit->Possess(StoredDriver);
-	
-	StoredDriver->EnableCharacterInput(PlayerController);
+	Driver->EnableCharacterInput(PlayerController);
+	Driver->OnExitVehicle(ExitTransform);
 	PlayerController->SetViewTargetWithBlend(StoredDriver,0.3f,EViewTargetBlendFunction::VTBlend_Linear,0.f,true);
 	UE_LOG(LogTemp, Warning, TEXT("ExitVehicle: Returned control to %s"), *GetNameSafe(StoredDriver));
 	
@@ -326,6 +326,22 @@ void ACVehiclePawn::SpawnAndPossessAI()
 	
 	UE_LOG(LogTemp, Warning, TEXT("SpawnAndPossessAI"));
 }
+
+void ACVehiclePawn::SetUI()
+{
+	VehicleWidget = Cast<UVehicleWidget>(GetController());
+	if (!VehicleWidget) return;
+}
+
+void ACVehiclePawn::UpdateUI()
+{
+	if (!VehicleWidget) return;
+	USpeedGuage* SPDGuage = VehicleWidget->GetSpeedWidgdet();
+	if (!SPDGuage) return;
+	int SPD = MovementComponent->GetForwardSpeedMPH();
+	SPDGuage->SetValue(SPD);
+}
+
 //Helper
 
 void ACVehiclePawn::AddMappingContext(APlayerController* PlayerController)

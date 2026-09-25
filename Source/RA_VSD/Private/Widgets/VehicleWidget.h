@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SpeedGuage.h"
+#include "VehicleEngineGuage.h"
 #include "Blueprint/UserWidget.h"
 #include "VehicleWidget.generated.h"
 
@@ -16,15 +18,13 @@ class UVehicleWidget : public UUserWidget
 	
 public:
 	virtual void NativeConstruct() override;
-	
+	USpeedGuage* GetSpeedWidgdet();
+	UVehicleEngineGuage* GetVehicleEngineWidgdet();
 private:
 	UPROPERTY(meta=(BindWidget))
 	class USpeedGuage* SpeedGuage;
 	
 	UPROPERTY(meta=(BindWidget))
-	class UVehicleWidget* VehicleWidget;
-	
-	UPROPERTY()
-	const class UChaosVehicleMovementComponent* VehicleMovementComponent;
+	class UVehicleEngineGuage* VehicleEngWidget;
 	
 };

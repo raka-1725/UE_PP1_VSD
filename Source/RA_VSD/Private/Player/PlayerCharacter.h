@@ -24,6 +24,7 @@ public:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void CheckNearbyVehicle();
 	void TryEnterVehicle();
 	void OnExitVehicle(FTransform ExitVehicleTransform);
 	
@@ -43,7 +44,7 @@ public:
 	class UInputAction* VehicleInteractAction;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Vehicle")
-	float InteractRadius = 300.0f;
+	float InteractRadius = 150.0f;
 	
 	UPROPERTY()
 	ACVehiclePawn* CurrentVehicle = nullptr;
@@ -59,5 +60,6 @@ private:
 	UPROPERTY(VisibleDefaultsOnly, Category = Camera)
 	class UCameraComponent* ViewCam;
 	
-	
+	UPROPERTY()
+	ACVehiclePawn* NearbyVehiclePawn;
 };

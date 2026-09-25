@@ -20,8 +20,7 @@ public:
 private:
 	UPROPERTY()
 	class APlayerCharacter* PlayerCharacter;
-	
-	
+
 	UPROPERTY()
 	ACVehiclePawn* VehiclePawn;
 	
@@ -33,16 +32,18 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Widget")
 	TSubclassOf<class UVehicleWidget> VehicleWidgetClass;
 	
-	UPROPERTY()
-	UVehicleWidget* VehicleWidget;
-	
 	UPROPERTY(EditDefaultsOnly, Category = "Widget")
 	TSubclassOf<class UPlayerWidget> PlayerWidgetClass;
+	
+public:
+	//widget ref
+	UPROPERTY()
+	UVehicleWidget* VehicleWidget;
 	
 	UPROPERTY()
 	UPlayerWidget* PlayerWidget;
 	
-	
+private:
 	void SpawnPlayerWidget();
 	void SpawnVehicleWidget();
 	void RemoveWidget();

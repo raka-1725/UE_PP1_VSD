@@ -152,4 +152,9 @@ private:
 	
 //AI
 	void SpawnAndPossessAI();
+	
+//UI
+	class UVehicleWidget* VehicleWidget;	
+	void SetUI();
+	void UpdateUI();
 };

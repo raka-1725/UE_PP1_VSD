@@ -10,8 +10,14 @@
 void UVehicleWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	ACVehiclePawn* VehiclePawn = Cast<APlayerCharacter>(GetOwningPlayer())->CurrentVehicle;
-	VehicleMovementComponent = VehiclePawn->GetVehicleMovementComponent();
-	
-	SpeedGuage->SetValue(VehicleMovementComponent->GetForwardSpeedMPH());	
+}
+
+USpeedGuage* UVehicleWidget::GetSpeedWidgdet()
+{
+	return SpeedGuage;
+}
+
+UVehicleEngineGuage* UVehicleWidget::GetVehicleEngineWidgdet()
+{
+	return VehicleEngWidget;
 }

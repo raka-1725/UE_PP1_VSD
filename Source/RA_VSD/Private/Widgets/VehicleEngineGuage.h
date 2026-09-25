@@ -14,4 +14,5 @@ class RA_VSD_API UVehicleEngineGuage : public UUserWidget
 {
 	GENERATED_BODY()
 	
+	//130 - -130 for needle rotation
 };
