@@ -75,6 +75,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* VehicleInteractAction;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* ReverseInputAction;
+	
 	//priority higher than player
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	int32 MappingPriority = 1;
@@ -134,12 +137,14 @@ private:
 	void Input_Throttle(const FInputActionValue& Val);
 	void Input_Brake(const FInputActionValue& Val);
 	void Input_HandBrake();
+	void Input_Reverse();
 	void Input_InteractVehicle();
 	
 	void Input_ThrottleReleased(const FInputActionValue& Val);
 	void Input_BrakeReleased(const FInputActionValue& Val);
 	void Input_SteerReleased(const FInputActionValue& Val);
 	void Input_HandBrakeReleased(const FInputActionValue& Val);
+	void Input_ReverseReleased(const FInputActionValue& Val);
 	
 	void AddMappingContext(APlayerController* PlayerController);
 	void RemoveMappingContext(APlayerController* PlayerController);

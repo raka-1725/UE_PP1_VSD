@@ -180,6 +180,11 @@ void ACVehiclePawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 			EnhancedInputComponent->BindAction(HandBrakeInputAction, ETriggerEvent::Started, this, &ACVehiclePawn::Input_HandBrake);
 			EnhancedInputComponent->BindAction(HandBrakeInputAction, ETriggerEvent::Completed, this, &ACVehiclePawn::Input_HandBrakeReleased);
 		}
+		if (ReverseInputAction)
+		{
+			EnhancedInputComponent->BindAction(ReverseInputAction, ETriggerEvent::Started, this, &ACVehiclePawn::Input_Reverse);
+			EnhancedInputComponent->BindAction(ReverseInputAction, ETriggerEvent::Completed, this, &ACVehiclePawn::Input_ReverseReleased);
+		}
 	}
 }
 
@@ -336,6 +341,10 @@ void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 void ACVehiclePawn::ExitVehicle(AController* Exit)
 {
 	if (!Exit || !StoredDriver ||!bCanExitVehicle) return;
+	
+	float CurrentSpeed = GetVelocity().Size();
+	if (CurrentSpeed > 30.0f) return;
+	
 	APlayerController* PlayerController = Cast<APlayerController>(Exit);
 	
 	RemoveMappingContext(PlayerController);
@@ -407,7 +416,7 @@ void ACVehiclePawn::UpdateUI()
 	EngineGuage->SetRPMValue(CurrentRPM, MaxRPM);
 	EngineGuage->SetGear(CurrentGear);
 	
-	
+	EngineGuage->SetHandBrakeIcon(MovementComponent->GetHandbrakeInput());
 }
 
 //Helper
@@ -488,6 +497,11 @@ void ACVehiclePawn::Input_HandBrake()
 	UE_LOG(LogTemp, Warning, TEXT("Hand Brake | %s"), MovementComponent->GetHandbrakeInput() ? TEXT("true") : TEXT("false"));
 }
 
+void ACVehiclePawn::Input_Reverse()
+{
+	MovementComponent->SetTargetGear(-1, true);
+}
+
 void ACVehiclePawn::Input_InteractVehicle()
 {
 	if (!bCanExitVehicle || bIgnoreInteractInput) {UE_LOG(LogTemp, Warning, TEXT("Exit vehicle return")); return;}
@@ -515,6 +529,11 @@ void ACVehiclePawn::Input_HandBrakeReleased(const FInputActionValue& Val)
 	MovementComponent->SetHandbrakeInput(false);
 	UE_LOG(LogTemp, Warning, TEXT("Hand Brake | %s"), MovementComponent->GetHandbrakeInput() ? TEXT("true") : TEXT("false"));
 
+}
+
+void ACVehiclePawn::Input_ReverseReleased(const FInputActionValue& Val)
+{
+	MovementComponent->SetTargetGear(0, true);
 }
 
 

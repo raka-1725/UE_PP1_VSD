@@ -20,6 +20,7 @@ public:
 	virtual void NativeConstruct() override;
 	void SetRPMValue(float currentRPM, float MaxRPM);
 	void SetGear(int32 currentGear);
+	void SetHandBrakeIcon(bool BrakeSet);
 	
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -30,4 +31,14 @@ private:
 	
 	UPROPERTY(meta = (BindWidget))
 	UImage* RPMNeedle;
+	
+	UPROPERTY(meta = (BindWidget))
+	UImage* HandBrakeIcon;
+	
+	UPROPERTY(EditAnywhere, Category = "Indicators")
+	FLinearColor HandBrakeColor;
+	
+	UPROPERTY(EditAnywhere, Category = "Indicators")
+	FLinearColor IconIdleColor;
+	
 };

@@ -45,3 +45,11 @@ void UVehicleEngineGuage::SetGear(int32 CurrentGear)
 
 	GearText->SetText(FText::FromString(GearString));
 }
+
+void UVehicleEngineGuage::SetHandBrakeIcon(bool BrakeSet)
+{
+	if (!HandBrakeIcon) return;
+	
+	HandBrakeIcon->SetBrushTintColor(BrakeSet ? HandBrakeColor : IconIdleColor);
+}
+
