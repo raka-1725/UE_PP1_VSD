@@ -18,8 +18,8 @@ class UVehicleWidget : public UUserWidget
 	
 public:
 	virtual void NativeConstruct() override;
-	USpeedGuage* GetSpeedWidgdet();
-	UVehicleEngineGuage* GetVehicleEngineWidgdet();
+	USpeedGuage* GetSpeedWidget() const;
+	UVehicleEngineGuage* GetVehicleEngineWidget() const;
 private:
 	UPROPERTY(meta=(BindWidget))
 	class USpeedGuage* SpeedGuage;

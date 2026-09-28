@@ -340,11 +340,24 @@ void ACVehiclePawn::UpdateUI()
 {
 	if (!VehicleWidget || !MovementComponent) return;
 	
-	USpeedGuage* SPDGuage = VehicleWidget->GetSpeedWidgdet();
+	USpeedGuage* SPDGuage = VehicleWidget->GetSpeedWidget();
 	if (!SPDGuage) return;
 	
 	int32 SPD = FMath::RoundToInt(MovementComponent->GetForwardSpeedMPH());
 	SPDGuage->SetValue(SPD);
+	
+	UVehicleEngineGuage* EngineGuage = VehicleWidget->GetVehicleEngineWidget();
+	if (!EngineGuage) return;
+	
+	UChaosWheeledVehicleMovementComponent* CWVMC = Cast<UChaosWheeledVehicleMovementComponent>(MovementComponent);
+	float CurrentRPM = CWVMC->GetEngineRotationSpeed();
+	float MaxRPM = CWVMC->GetEngineMaxRotationSpeed();
+	int32 CurrentGear = MovementComponent->GetCurrentGear();
+	
+	EngineGuage->SetRPMValue(CurrentRPM, MaxRPM);
+	EngineGuage->SetGear(CurrentGear);
+	
+	
 }
 
 //Helper

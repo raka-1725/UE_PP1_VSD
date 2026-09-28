@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
+#include "Components/Image.h"
 #include "VehicleEngineGuage.generated.h"
-
 /**
  * 
  */
@@ -15,4 +16,18 @@ class RA_VSD_API UVehicleEngineGuage : public UUserWidget
 	GENERATED_BODY()
 	
 	//130 - -130 for needle rotation
+public:
+	virtual void NativeConstruct() override;
+	void SetRPMValue(float currentRPM, float MaxRPM);
+	void SetGear(int32 currentGear);
+	
+private:
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RPMText;
+	
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* GearText;
+	
+	UPROPERTY(meta = (BindWidget))
+	UImage* RPMNeedle;
 };

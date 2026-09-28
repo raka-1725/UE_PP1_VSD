@@ -12,12 +12,12 @@ void UVehicleWidget::NativeConstruct()
 	Super::NativeConstruct();
 }
 
-USpeedGuage* UVehicleWidget::GetSpeedWidgdet()
+USpeedGuage* UVehicleWidget::GetSpeedWidget() const
 {
 	return SpeedGuage;
 }
 
-UVehicleEngineGuage* UVehicleWidget::GetVehicleEngineWidgdet()
+UVehicleEngineGuage* UVehicleWidget::GetVehicleEngineWidget() const
 {
 	return VehicleEngWidget;
 }
