@@ -90,6 +90,17 @@ void ACVehiclePawn::Tick(float DeltaTime)
 	if (bCanExitVehicle) bIgnoreInteractInput = false;
 	if (bIsPlayerDriving) UpdateVehicleInputs(DeltaTime);
 	if (bIsPlayerDriving) UpdateUI();
+	
+	if (bIsInRecovery) return;
+	if (IsVehicleFlipped())
+	{
+		float CurrentSpeed = GetVelocity().Size();
+		if (CurrentSpeed < 30.0f)
+		{
+			CheckAndStartFlipRecovery();
+		}
+	}
+
 }
 
 UChaosWheeledVehicleMovementComponent* ACVehiclePawn::GetWMC() const
@@ -247,6 +258,45 @@ bool ACVehiclePawn::CanEnterVehicle(APlayerCharacter* PlayerCharacter) const
 	if (bIsPlayerDriving || StoredDriver != nullptr) return false;
 	//UE_LOG(LogTemp, Warning, TEXT("Can enter vehicle %d"), bIsPlayerDriving);
 	return true;
+}
+
+bool ACVehiclePawn::IsVehicleFlipped() const
+{
+	FVector UpVector = GetActorUpVector();
+	FVector RightVector = GetActorRightVector();
+	
+	bool bIsUpsideDown = (UpVector.Z < 0.0f);
+	bool bIsOnSide = (FMath::Abs(RightVector.Z) > 0.7f);
+	
+	return bIsUpsideDown || bIsOnSide;
+}
+
+void ACVehiclePawn::CheckAndStartFlipRecovery()
+{
+	bIsInRecovery = true;
+	GetWorldTimerManager().SetTimer
+	(FlipRecoveryTimerHandle, this, 
+		&ACVehiclePawn::RollOverRecovery, RecoveryDelay, false);
+}
+
+//rollover recover
+void ACVehiclePawn::RollOverRecovery()
+{
+	if (IsVehicleFlipped())
+	{
+		FTransform ActorTransform = GetActorTransform();
+		FRotator CurrentRotation = ActorTransform.Rotator();
+		
+		FRotator UprightRotation(0.0f, CurrentRotation.Yaw, 0.0f);
+		ActorTransform.SetRotation(UprightRotation.Quaternion());
+		
+		FVector NewLocation = ActorTransform.GetLocation() + FVector(0.0f, 0.0f, 50.0f);
+		ActorTransform.SetLocation(NewLocation);
+		
+		SetActorTransform(ActorTransform, false, nullptr, ETeleportType::TeleportPhysics);
+	}
+	bIsInRecovery = false;
+	
 }
 
 void ACVehiclePawn::EnterVehicle(AController* NewDriver)
@@ -413,6 +463,7 @@ void ACVehiclePawn::UpdateVehicleInputs(float DeltaTime)
 	ApplyBrake(BrakeCurrent);
 	ApplySteer(SteerCurrent);
 }
+
 
 //Input handle
 void ACVehiclePawn::Input_Steer(const FInputActionValue& value)

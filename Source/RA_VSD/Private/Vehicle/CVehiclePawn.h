@@ -112,6 +112,22 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	bool bAIDrive = false;
 	
+//RollOverRecover
+	UPROPERTY(EditAnywhere, Category = "Vehicle Recovery")
+	bool bRollOverRecovery = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Vehicle Recovery")
+	float RecoveryDelay = 5.0f;
+	
+	bool IsVehicleFlipped() const;
+	bool bIsInRecovery = false;
+	FTimerHandle FlipRecoveryTimerHandle;
+	void CheckAndStartFlipRecovery();
+	
+	UFUNCTION()
+	void RollOverRecovery();
+	
+	
 private:
 	//Only player
 	void Input_Steer(const FInputActionValue& value);
