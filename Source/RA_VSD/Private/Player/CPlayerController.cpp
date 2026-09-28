@@ -37,7 +37,9 @@ void ACPlayerController::SpawnVehicleWidget()
 	if (!VehicleWidgetClass) return;
 	VehicleWidget = CreateWidget<UVehicleWidget>(this,VehicleWidgetClass);
 	VehicleWidget->AddToViewport();
-	if (ACVehiclePawn* VehiclePawn = Cast<ACVehiclePawn>(GetPawn()))
+	
+	VehiclePawn = Cast<ACVehiclePawn>(GetPawn());
+	if (VehiclePawn)
 	{
 		VehiclePawn->SetVehicleWidget(VehicleWidget);
 	}
@@ -45,7 +47,15 @@ void ACPlayerController::SpawnVehicleWidget()
 
 void ACPlayerController::RemoveWidget()
 {
-	if (!VehicleWidget || !PlayerWidget) return;
-	PlayerWidget->RemoveFromViewport();
-	VehicleWidget->RemoveFromViewport();
+	if (PlayerWidget)
+	{
+		PlayerWidget->RemoveFromParent();
+		PlayerWidget = nullptr;
+	}
+    
+	if (VehicleWidget)
+	{
+		VehicleWidget->RemoveFromParent();
+		VehicleWidget = nullptr;
+	}
 }
