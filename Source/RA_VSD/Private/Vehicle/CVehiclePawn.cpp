@@ -308,6 +308,7 @@ void ACVehiclePawn::EnterVehicle(AController* NewDriver)
 {
 	if (!NewDriver) return;
 	if (bIsPlayerDriving || StoredDriver != nullptr) return;
+	ACVehicleAIController* VehicleAIController = Cast<ACVehicleAIController>(this);
 	
 	StoredDriver = Cast<APlayerCharacter>(NewDriver->GetPawn());
 	if (!StoredDriver)
@@ -375,14 +376,19 @@ void ACVehiclePawn::SpawnAndPossessAI()
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
-	
+	if (CachedAIController)
+	{
+		CachedAIController->AISplinePath = AISplinePathActor;
+		CachedAIController->Possess(this);
+		return;
+	}
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
-	ACVehicleAIController* VehicleAI = World->SpawnActor<ACVehicleAIController>(ACVehicleAIController::StaticClass(), GetActorTransform(), SpawnParams);
+	CachedAIController = World->SpawnActor<ACVehicleAIController>(ACVehicleAIController::StaticClass(), GetActorTransform(), SpawnParams);
 
-	VehicleAI->AISplinePath = AISplinePathActor;
-	VehicleAI->Possess(this);
+	CachedAIController->AISplinePath = AISplinePathActor;
+	CachedAIController->Possess(this);
 	
 	UE_LOG(LogTemp, Warning, TEXT("SpawnAndPossessAI"));
 }

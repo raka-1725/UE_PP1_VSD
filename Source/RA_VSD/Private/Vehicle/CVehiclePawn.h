@@ -106,6 +106,9 @@ public:
 	void UpdateVehicleInputs(float DeltaTime);
 	
 //AI
+	UPROPERTY()
+	TObjectPtr<ACVehicleAIController> CachedAIController;
+	
 	UPROPERTY(EditAnywhere, Category = "AI")
 	ASplinePathActor* AISplinePathActor = nullptr;
 	
