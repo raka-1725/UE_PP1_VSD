@@ -157,4 +157,6 @@ private:
 	class UVehicleWidget* VehicleWidget;	
 	void SetUI();
 	void UpdateUI();
+public:
+	void SetVehicleWidget(UVehicleWidget* Widget){ VehicleWidget = Widget; }
 };

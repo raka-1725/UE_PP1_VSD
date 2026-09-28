@@ -16,6 +16,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Player/CPlayerController.h"
 #include "Widgets/VehicleWidget.h"
 
 ACVehiclePawn::ACVehiclePawn()
@@ -329,19 +330,20 @@ void ACVehiclePawn::SpawnAndPossessAI()
 
 void ACVehiclePawn::SetUI()
 {
-	VehicleWidget = Cast<UVehicleWidget>(GetController());
-	if (!VehicleWidget) return;
+	if (ACPlayerController* PC = Cast<ACPlayerController>(GetController()))
+	{
+		VehicleWidget = PC->VehicleWidget;
+	}
 }
 
 void ACVehiclePawn::UpdateUI()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UpdateUI"));
-	if (!VehicleWidget) return;
+	if (!VehicleWidget || !MovementComponent) return;
+	
 	USpeedGuage* SPDGuage = VehicleWidget->GetSpeedWidgdet();
-	UE_LOG(LogTemp, Warning, TEXT("SPDGuage"));
 	if (!SPDGuage) return;
-	int SPD = MovementComponent->GetForwardSpeedMPH();
-	UE_LOG(LogTemp, Warning, TEXT("SPD: %d"), SPD);
+	
+	int32 SPD = FMath::RoundToInt(MovementComponent->GetForwardSpeedMPH());
 	SPDGuage->SetValue(SPD);
 }
 

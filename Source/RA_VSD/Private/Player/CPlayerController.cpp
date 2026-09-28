@@ -37,6 +37,10 @@ void ACPlayerController::SpawnVehicleWidget()
 	if (!VehicleWidgetClass) return;
 	VehicleWidget = CreateWidget<UVehicleWidget>(this,VehicleWidgetClass);
 	VehicleWidget->AddToViewport();
+	if (ACVehiclePawn* VehiclePawn = Cast<ACVehiclePawn>(GetPawn()))
+	{
+		VehiclePawn->SetVehicleWidget(VehicleWidget);
+	}
 }
 
 void ACPlayerController::RemoveWidget()
